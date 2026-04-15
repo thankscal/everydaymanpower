@@ -2,2903 +2,478 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>每日人力</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>每日人力 - 智慧班表助手</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <style>
-        /* 基本樣式 */
+        /* ----- 全局緊湊風格，自適應所有裝置 ----- */
+        * {
+            box-sizing: border-box;
+        }
         body {
-            background-color: #f8f9fa;
-            font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
-            padding-top: 20px;
-            padding-bottom: 50px;
+            background-color: #f4f7fc;
+            font-family: 'Segoe UI', 'Microsoft JhengHei', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+            padding: 12px 0 30px 0;
+            margin: 0;
+        }
+        .container {
+            max-width: 1400px;
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+        .text-center.mb-4 {
+            margin-bottom: 1.2rem !important;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.25rem;
+        }
+        .text-muted {
+            font-size: 0.8rem;
+            margin-bottom: 0.2rem;
         }
         .card {
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border: none;
-            margin-bottom: 20px;
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            overflow: hidden;
         }
-        .btn-primary {
-            background-color: #4361ee;
-            border-color: #4361ee;
+        .card-body {
+            padding: 1rem 1rem;
         }
-        .btn-primary:hover {
-            background-color: #3a0ca3;
-            border-color: #3a0ca3;
-        }
-        
-        /* 上傳區塊 */
-        .upload-area {
-            border: 2px dashed #ced4da;
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            background-color: white;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .upload-area:hover {
-            border-color: #4361ee;
-            background-color: #f0f5ff;
-        }
-        
-        /* 人員卡片 */
-        .person-card {
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-        }
-        
-        /* 日期標頭 */
-        .date-header {
-            background: linear-gradient(135deg, #4361ee, #3a0ca3);
-            color: white;
-            padding: 15px;
-            border-radius: 8px 8px 0 0;
-        }
-        
-        /* 載入動畫 */
-        .loading-spinner {
-            display: none;
-            text-align: center;
-            padding: 40px;
-        }
-        
-        /* 結果區 */
-        .result-section {
-            display: none;
-        }
-        
-        /* 班型區塊 */
-        .shift-section {
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #e0e0e0;
-        }
-        
-        /* 班型標題 */
-        .shift-title {
-            font-weight: bold;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-            color: #333;
+        .card-title {
             font-size: 1.2rem;
+            margin-bottom: 0.5rem;
         }
-        
-        /* 人員姓名 */
-        .person-name {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
+        .upload-area {
+            padding: 20px 15px;
             cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-            display: inline-block;
-            padding: 2px 5px;
-            border-radius: 4px;
         }
-        .person-name:hover {
-            background-color: rgba(67, 97, 238, 0.1);
-            color: #4361ee;
-        }
-        .person-name.copied {
-            background-color: rgba(40, 167, 69, 0.2);
-            color: #28a745;
-        }
-        .copy-tooltip {
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-        }
-        .person-name:hover .copy-tooltip {
-            opacity: 1;
-        }
-        
-        /* 英文班型 */
-        .english-shift {
-            color: #ff9e00;
-            font-weight: normal;
-            font-size: 0.9rem;
-            margin-left: 8px;
-        }
-        
-        /* 班表區塊背景色 */
-        .holiday-section {
-            background-color: rgba(255, 158, 0, 0.15) !important;
-            border-left: 4px solid #ff9e00;
-        }
-        .regular-shift-section {
-            background-color: rgba(6, 214, 160, 0.15) !important;
-            border-left: 4px solid #06d6a0;
-        }
-        .random-section {
-            background-color: rgba(255, 255, 0, 0.15) !important;
-            border-left: 4px solid #ffff00;
-        }
-        .special-section {
-            background-color: rgba(156, 39, 176, 0.15) !important;
-            border-left: 4px solid #9c27b0;
-        }
-        .warehouse-section {
-            background-color: rgba(186, 225, 143, 0.25) !important;
-            border-left: 4px solid #bae18f;
-        }
-        .qc-section {
-            background-color: rgba(238, 201, 32, 0.25) !important;
-            border-left: 4px solid #eec920;
-        }
-        .administrative-section {
-            background-color: rgba(255, 107, 107, 0.25) !important;
-            border-left: 4px solid #ff6b6b;
-        }
-        
-        /* 班表標題顏色 */
-        .holiday-title {
-            color: #ff9e00;
-        }
-        .work-shift-title {
-            color: #06d6a0;
-        }
-        .random-title {
-            color: #bc6c25;
-        }
-        .special-title {
-            color: #9c27b0;
-        }
-        .warehouse-title {
-            color: #7c9f2d;
-        }
-        .qc-title {
-            color: #b8940f;
-        }
-        .administrative-title {
-            color: #d9534f;
-        }
-        
-        /* 日期選擇器 */
-        .date-selector {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        #dateSelect {
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 10px;
-            width: 100%;
-            font-size: 1.1rem;
-        }
-        
-        /* 檔案資訊 */
-        .file-info {
-            background-color: #e8f4fd;
-            border-radius: 6px;
-            padding: 10px;
-            margin-top: 15px;
-        }
-        
-        /* 錯誤訊息 */
-        .error-message {
-            color: #dc3545;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        
-        /* 上傳按鈕容器 */
-        .upload-btn-container {
-            margin-top: 20px;
-        }
-        
-        /* 隱藏的檔案輸入 */
-        .file-input-hidden {
-            display: none;
-        }
-        
-        /* 過濾清單資訊 */
-        .filtered-list-info {
-            background-color: #e8f4fd;
-            border-radius: 6px;
-            padding: 10px;
-            margin-top: 10px;
-        }
-        
-        /* 進度條 */
-        .progress {
-            height: 20px;
-            margin-top: 15px;
-        }
-        
-        /* 上傳說明 */
         .upload-instruction {
-            font-size: 1.1rem;
-            margin-bottom: 10px;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
         }
-        
-        /* 藍色文字 */
-        .blue-text {
-            color: #4361ee;
-            font-weight: bold;
+        .btn-lg {
+            padding: 0.5rem 1.2rem;
+            font-size: 1rem;
         }
-        
-        /* 班型描述 */
-        .shift-description {
+        .date-selector {
+            padding: 12px 15px;
+            margin-bottom: 16px;
+            background: white;
+            border-radius: 20px;
+        }
+        .date-selector h5 {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+        .form-select-lg {
+            font-size: 0.95rem;
+            padding: 0.5rem 0.75rem;
+        }
+        .btn-outline-secondary, .btn-outline-danger {
+            padding: 0.3rem 0.8rem;
             font-size: 0.85rem;
-            color: #666;
+        }
+        .shift-section {
+            padding: 12px 15px;
+            margin-bottom: 16px;
+            border-radius: 20px;
+        }
+        .shift-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+        }
+        .shift-title .badge {
+            font-size: 0.85rem;
+            padding: 5px 12px;
+        }
+        /* 人員卡片 - 高密度，鮮明顏色 */
+        .person-card {
+            padding: 10px 10px 8px 10px;
+            margin-bottom: 8px;
+            border-radius: 14px;
+            background-color: rgba(255,255,255,0.85);
+            transition: all 0.2s ease;
+            height: 100%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-left: 4px solid #e0e0e0;
+            cursor: pointer;
+        }
+        .person-name {
+            font-size: 1rem;
+            font-weight: 600;
+            display: inline-block;
+            padding: 2px 4px;
+            border-radius: 10px;
+            margin-bottom: 2px;
+            word-break: keep-all;
+        }
+        .deputy-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            margin-left: 6px;
+            vertical-align: middle;
+            background-color: #dc3545;
+            color: white;
+            border-radius: 12px;
+        }
+        .shift-description {
+            font-size: 0.7rem;
+            color: #5a626e;
             margin-top: 5px;
-            font-style: italic;
+            line-height: 1.2;
         }
-        
-        /* 特殊班型徽章 */
-        .special-shift-badge {
-            background-color: #9c27b0 !important;
-            color: white !important;
-            margin-left: 5px;
-            font-size: 0.8rem;
-            padding: 3px 8px;
+        .rank-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 8px 0 5px 0;
+            padding-bottom: 3px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
         }
-        
-        /* 休假折疊 */
-        .holiday-collapse {
-            margin-top: 10px;
+        .rank-divider {
+            margin: 8px 0;
+            border-top: 1.5px solid rgba(220,53,69,0.5);
         }
-        .holiday-toggle-btn {
-            width: 100%;
-            text-align: left;
-            padding: 15px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            background-color: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(255, 158, 0, 0.3);
-        }
-        .holiday-toggle-btn .bi {
-            transition: transform 0.3s;
-        }
-        .holiday-toggle-btn[aria-expanded="true"] .bi-chevron-down {
-            transform: rotate(180deg);
-        }
-        .collapse-content {
-            padding: 20px;
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 0 0 8px 8px;
-        }
-        
-        /* 人員卡片背景色 */
+        /* 人員類別背景色 (還原原本鮮明色彩) */
         .group-leader {
-            background-color: rgba(255, 153, 0, 0.25) !important;
+            background-color: rgba(255, 153, 0, 0.3) !important;
             border-left: 4px solid #ff9900 !important;
+        }
+        .foreman {
+            background-color: rgba(255, 204, 153, 0.4) !important;
+            border-left: 4px solid #ffcc99 !important;
         }
         .authorized-person {
             background-color: rgba(255, 255, 255, 0.9) !important;
-            border-left: 4px solid #e0e0e0 !important;
+            border-left: 4px solid #b0b0b0 !important;
         }
         .m1-person {
-            background-color: rgba(204, 255, 204, 0.4) !important;
-            border-left: 4px solid #ccffcc !important;
+            background-color: rgba(204, 255, 204, 0.5) !important;
+            border-left: 4px solid #9bcd9b !important;
         }
         .m0-person {
-            background-color: rgba(198, 224, 180, 0.4) !important;
-            border-left: 4px solid #c6e0b4 !important;
-        }
-        .random-person {
-            background-color: rgba(255, 255, 0, 0.25) !important;
-            border-left: 4px solid #ffff00 !important;
-        }
-        .foreman {
-            background-color: rgba(255, 204, 153, 0.35) !important;
-            border-left: 4px solid #ffcc99 !important;
+            background-color: rgba(198, 224, 180, 0.5) !important;
+            border-left: 4px solid #a8c99a !important;
         }
         .qc-person {
-            background-color: rgba(238, 201, 32, 0.35) !important;
+            background-color: rgba(238, 201, 32, 0.4) !important;
             border-left: 4px solid #eec920 !important;
         }
         .warehouse-person {
-            background-color: rgba(186, 225, 143, 0.35) !important;
+            background-color: rgba(186, 225, 143, 0.45) !important;
             border-left: 4px solid #bae18f !important;
         }
         .administrative-person {
             background-color: rgba(255, 107, 107, 0.35) !important;
             border-left: 4px solid #ff6b6b !important;
         }
-        
-        /* 調試資訊 */
-        .debug-info {
-            font-size: 0.8rem;
-            color: #666;
-            margin-top: 10px;
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            border-left: 3px solid #6c757d;
+        .random-person {
+            background-color: rgba(255, 255, 0, 0.25) !important;
+            border-left: 4px solid #ffd966 !important;
         }
-        .debug-info pre {
-            margin: 0;
-            font-size: 0.75rem;
-            max-height: 200px;
-            overflow: auto;
-        }
-        
-        /* 特殊人員卡片 */
-        .warehouse-person-card {
-            background-color: rgba(186, 225, 143, 0.35) !important;
-            border-left: 4px solid #bae18f !important;
-        }
-        .special-person-card {
-            background-color: rgba(156, 39, 176, 0.15) !important;
-            border-left: 4px solid #9c27b0 !important;
-        }
-        .qc-person-card {
-            background-color: rgba(238, 201, 32, 0.35) !important;
-            border-left: 4px solid #eec920 !important;
-        }
-        .administrative-person-card {
-            background-color: rgba(255, 107, 107, 0.35) !important;
-            border-left: 4px solid #ff6b6b !important;
-        }
-        
-        /* 移除正規班型卡片的時間描述 */
-        .regular-shift-card .shift-description {
-            display: none;
-        }
-        
-        /* 正規班型的人員卡片背景色 */
-        .regular-shift-card {
-            /* 背景色會由人員類別決定，這裡不設定 */
-        }
-        
-        /* 重新上傳按鈕 */
-        .reupload-btn {
-            margin-top: 10px;
-        }
-        
-        /* 複製提示 */
-        .copy-notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #28a745;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.3s, transform 0.3s;
-            transform: translateY(-10px);
-        }
-        .copy-notification.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        /* 分隔線 */
-        .rank-divider {
-            border-top: 3px solid rgba(220, 53, 69, 0.7);
-            margin: 15px 0;
-            opacity: 0.7;
-        }
-        
-        /* 層級標題 */
-        .rank-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin: 15px 0 10px 0;
-            padding-bottom: 5px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-            color: #333;
-        }
-        
-        /* 班型內部層級區塊 */
-        .shift-rank-group {
-            margin-bottom: 15px;
-        }
-        
-        /* 修正休假人員折疊內容的背景 */
-        .holiday-section .collapse-content {
-            background-color: rgba(255, 255, 255, 0.5);
-        }
-        
-        /* 代領班勾選框樣式 */
-        .deputy-checkbox-container {
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-        }
-        .deputy-checkbox {
-            margin-right: 5px;
-            cursor: pointer;
-        }
-        .deputy-label {
-            font-size: 0.8rem;
-            color: #666;
-            cursor: pointer;
-        }
-        .deputy-label.checked {
-            color: #dc3545;
-            font-weight: bold;
-        }
-        
-        /* 代領班卡片樣式 */
+        /* 代領班特殊卡片 */
         .deputy-card {
-            background-color: rgba(220, 53, 69, 0.2) !important;
+            background-color: rgba(220, 53, 69, 0.25) !important;
             border-left: 4px solid #dc3545 !important;
         }
-        .deputy-badge {
-            background-color: #dc3545 !important;
-            color: white !important;
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            margin-left: 5px;
-            border-radius: 3px;
+        /* 班型區塊背景色 */
+        .holiday-section {
+            background-color: rgba(255, 158, 0, 0.15) !important;
+            border-left: 4px solid #ff9e00;
         }
-        
-        /* 代領班人員清單樣式 */
-        .deputy-list-section {
-            background-color: rgba(220, 53, 69, 0.1) !important;
-            border-left: 4px solid #dc3545 !important;
-            margin-top: 20px;
+        .regular-shift-section {
+            background-color: rgba(6, 214, 160, 0.12) !important;
+            border-left: 4px solid #06d6a0;
         }
-        .deputy-list-title {
-            color: #dc3545;
+        .random-section {
+            background-color: rgba(255, 255, 0, 0.12) !important;
+            border-left: 4px solid #e6c300;
         }
-        
-        /* 庫房人員班型時間標題 */
+        .special-section {
+            background-color: rgba(156, 39, 176, 0.12) !important;
+            border-left: 4px solid #9c27b0;
+        }
+        .warehouse-section {
+            background-color: rgba(186, 225, 143, 0.2) !important;
+            border-left: 4px solid #bae18f;
+        }
+        .administrative-section {
+            background-color: rgba(255, 107, 107, 0.12) !important;
+            border-left: 4px solid #ff6b6b;
+        }
+        /* 班型標題顏色 */
+        .holiday-title { color: #e67e22; }
+        .work-shift-title { color: #1e7e5e; }
+        .random-title { color: #b8860b; }
+        .special-title { color: #7b1fa2; }
+        .warehouse-title { color: #5a8f2c; }
+        .administrative-title { color: #c93a3a; }
         .warehouse-shift-title {
-            font-size: 1rem;
+            font-size: 0.85rem;
             font-weight: bold;
-            color: #7c9f2d;
-            margin-top: 15px;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 1px dashed rgba(186, 225, 143, 0.5);
+            color: #4a6e1f;
+            margin-top: 8px;
+            margin-bottom: 5px;
+            padding-bottom: 2px;
+            border-bottom: 1px dashed #bae18f;
         }
-        
-        /* 休假人員類別順序樣式 */
         .holiday-category-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-top: 20px;
-            margin-bottom: 15px;
-            padding: 8px 15px;
-            border-radius: 6px;
-            background-color: rgba(255, 255, 255, 0.6);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .group-leader-title {
-            color: #ff9900;
-            border-left: 5px solid #ff9900;
-        }
-        .foreman-title {
-            color: #ffcc99;
-            border-left: 5px solid #ffcc99;
-        }
-        .authorized-person-title {
-            color: #666;
-            border-left: 5px solid #e0e0e0;
-        }
-        .qc-person-title {
-            color: #eec920;
-            border-left: 5px solid #eec920;
-        }
-        .m1-person-title {
-            color: #ccffcc;
-            border-left: 5px solid #ccffcc;
-        }
-        .m0-person-title {
-            color: #c6e0b4;
-            border-left: 5px solid #c6e0b4;
-        }
-        .warehouse-person-title {
-            color: #bae18f;
-            border-left: 5px solid #bae18f;
-        }
-        .administrative-person-title {
-            color: #ff6b6b;
-            border-left: 5px solid #ff6b6b;
-        }
-        
-        /* 班型時間說明欄位 */
-        .shift-instruction-section {
-            background-color: rgba(67, 97, 238, 0.1) !important;
-            border-left: 4px solid #4361ee !important;
-        }
-        .shift-instruction-title {
-            color: #4361ee;
-        }
-        .shift-instruction-grid {
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 15px;
-        }
-        .shift-instruction-row {
-            display: flex;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-        .shift-instruction-item {
-            flex: 0 0 25%;
-            padding: 8px 5px;
             font-size: 0.9rem;
-            border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+            padding: 4px 10px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            border-radius: 20px;
+            background-color: rgba(255,255,200,0.6);
+            font-weight: 600;
         }
-        .shift-instruction-item:nth-child(4n+1) {
-            padding-left: 0;
-        }
-        .shift-instruction-item:nth-child(4n) {
-            padding-right: 0;
-        }
-        .shift-code {
-            font-weight: bold;
-            color: #4361ee;
-            display: inline-block;
-            min-width: 40px;
-        }
-        .shift-time {
-            color: #666;
-            margin-left: 5px;
-        }
-        .holiday-shift {
-            color: #ff9e00;
-        }
-        .training-shift {
-            color: #9c27b0;
-        }
-        
-        /* 班型時間對照表折疊樣式 */
-        .shift-instruction-collapse .card-header {
-            cursor: pointer;
-            background-color: rgba(67, 97, 238, 0.1);
-            border-bottom: none;
-            padding: 15px;
-        }
-        .shift-instruction-collapse .card-header:hover {
-            background-color: rgba(67, 97, 238, 0.15);
-        }
-        .shift-instruction-collapse .bi-chevron-down {
-            transition: transform 0.3s ease;
-            float: right;
-        }
-        .shift-instruction-collapse .collapsed .bi-chevron-down {
-            transform: rotate(-90deg);
-        }
-        
+        .group-leader-title { color: #ff9900; border-left: 3px solid #ff9900; padding-left: 8px; }
+        .foreman-title { color: #c97e00; border-left: 3px solid #ffcc99; padding-left: 8px; }
         /* 響應式調整 */
-        @media (max-width: 768px) {
-            .shift-instruction-item {
-                flex: 0 0 50%;
-            }
-            .shift-instruction-item:nth-child(2n+1) {
-                padding-left: 0;
-            }
-            .shift-instruction-item:nth-child(2n) {
-                padding-right: 0;
-            }
+        .row {
+            margin-left: -6px;
+            margin-right: -6px;
         }
-        
+        .row > [class*="col-"] {
+            padding-left: 6px;
+            padding-right: 6px;
+        }
         @media (max-width: 576px) {
-            .shift-instruction-item {
-                flex: 0 0 100%;
-                padding-left: 0 !important;
-                padding-right: 0 !important;
-            }
+            body { padding: 8px 0 20px 0; }
+            .container { padding-left: 8px; padding-right: 8px; }
+            .person-card { padding: 8px 8px 6px 8px; }
+            .person-name { font-size: 0.9rem; }
+            .shift-title { font-size: 0.95rem; }
+            .shift-section { padding: 10px 12px; margin-bottom: 12px; }
+            .card-body { padding: 0.8rem; }
+            .date-selector { padding: 10px 12px; }
+            .btn-sm, .btn-outline-secondary, .btn-outline-danger { font-size: 0.75rem; }
+        }
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .person-card { padding: 10px 8px; }
+        }
+        .alert { padding: 0.5rem 0.8rem; margin-bottom: 0.8rem; }
+        .file-info { padding: 8px; margin-top: 10px; }
+        .progress { height: 4px; margin-top: 8px; }
+        .shift-instruction-grid { padding: 8px 12px; }
+        .shift-instruction-item { font-size: 0.75rem; padding: 4px 5px; }
+        .shift-code { font-size: 0.75rem; }
+        .copy-notification { font-size: 0.85rem; padding: 8px 16px; position: fixed; top: 20px; right: 20px; background: #28a745; color: white; border-radius: 30px; opacity: 0; transition: 0.2s; z-index: 9999; }
+        .copy-notification.show { opacity: 1; transform: translateY(0); }
+        .deputy-list-section .card-body { padding: 12px; }
+        .deputy-list-title { font-size: 1rem; margin-bottom: 8px; }
+        /* 點擊複製游標提示 */
+        .person-card {
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 標題 -->
-        <div class="text-center mb-4">
-            <h1 class="fw-bold text-primary mb-2">
-                <i class="bi bi-calendar-check"></i> 每日人力
-            </h1>
-            <p class="text-muted">上傳Excel班表，根據顏色和姓名分類顯示</p>
-            <p class="text-muted small">支援 .xlsx 和 .xls 格式，自動檢測檔案結構</p>
+        <div class="text-center mb-3">
+            <h1 class="fw-bold text-primary mb-1"><i class="bi bi-calendar-check"></i> 每日人力</h1>
+            <p class="text-muted small">上傳Excel班表 · 智能分類 · 點擊姓名即可複製</p>
         </div>
 
-        <!-- 上傳區塊 -->
         <div class="card">
-            <div class="card-body">
-                <h5 class="card-title mb-3"><i class="bi bi-upload"></i> 上傳班表檔案</h5>
-                
-                <div class="text-center mb-3">
-                    <i class="bi bi-file-earmark-excel" style="font-size: 4rem; color: #4361ee;"></i>
-                </div>
-                
-                <div class="text-center">
-                    <h4 class="upload-instruction mb-3">
-                        點擊按鈕上傳班表檔案
-                    </h4>
-                    
-                    <!-- 單一檔案選擇按鈕 -->
-                    <div class="mb-3">
-                        <input type="file" id="fileInput" class="d-none" accept=".xlsx,.xls">
-                        <button class="btn btn-primary btn-lg px-5" id="uploadBtn" type="button">
-                            <i class="bi bi-folder2-open me-2"></i>選擇檔案
-                        </button>
-                    </div>
-                    
-                    <p class="text-muted mb-3">請選擇Excel班表檔案 (.xlsx 或 .xls)</p>
-                </div>
-                
-                <div id="fileInfo" class="file-info mt-3" style="display: none;">
-                    <i class="bi bi-check-circle text-success"></i>
-                    <span id="fileName">檔案已上傳，正在解析...</span>
-                    <div class="progress mt-2" id="progressBar" style="display: none;">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div id="errorMessage" class="alert alert-danger mt-3" style="display: none;"></div>
+            <div class="card-body text-center">
+                <i class="bi bi-file-earmark-excel" style="font-size: 3rem; color: #4361ee;"></i>
+                <h4 class="upload-instruction mt-2">點擊按鈕上傳班表檔案</h4>
+                <input type="file" id="fileInput" class="d-none" accept=".xlsx,.xls">
+                <button class="btn btn-primary px-4" id="uploadBtn" type="button"><i class="bi bi-folder2-open me-1"></i> 選擇檔案</button>
+                <p class="text-muted small mt-2 mb-0">支援 .xlsx / .xls，自動篩選指定人員</p>
+                <div id="fileInfo" class="file-info mt-2" style="display: none;"><i class="bi bi-check-circle text-success"></i> <span id="fileName"></span><div class="progress mt-1" id="progressBar" style="display: none;"><div class="progress-bar progress-bar-striped" style="width: 0%"></div></div></div>
+                <div id="errorMessage" class="alert alert-danger mt-2" style="display: none;"></div>
             </div>
         </div>
 
-        <!-- 載入動畫 -->
-        <div class="loading-spinner" id="loadingSpinner">
-            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;">
-                <span class="visually-hidden">載入中...</span>
-            </div>
-            <h4 class="mt-3">解析班表中，請稍候...</h4>
-            <p class="text-muted" id="loadingStatus">正在讀取檔案...</p>
-            <div class="progress mt-3" id="loadingProgress" style="display: none;">
-                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
-            </div>
+        <div class="loading-spinner" id="loadingSpinner" style="display: none; text-align: center; padding: 30px;">
+            <div class="spinner-border text-primary" style="width: 2.5rem; height: 2.5rem;"></div>
+            <h5 class="mt-2">解析班表中...</h5>
         </div>
 
-        <!-- 結果區 -->
         <div class="result-section" id="resultSection" style="display: none;">
-            <!-- 日期選擇 -->
             <div class="date-selector">
-                <h5 class="mb-3"><i class="bi bi-calendar-date"></i> 選擇日期</h5>
-                <p class="text-muted mb-3">請選擇要查詢的日期：</p>
-                <select class="form-select form-select-lg" id="dateSelect">
-                    <!-- 日期選項會在這裡動態產生 -->
-                </select>
-                
-                <div class="d-flex justify-content-between mt-3">
-                    <button class="btn btn-outline-secondary" id="reuploadBtn">
-                        <i class="bi bi-arrow-clockwise"></i> 重新上傳檔案
-                    </button>
-                    <button class="btn btn-outline-danger" id="clearStorageBtn">
-                        <i class="bi bi-trash"></i> 清除本地資料
-                    </button>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <h5 class="mb-0"><i class="bi bi-calendar-date"></i> 查詢日期</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" id="reuploadBtn"><i class="bi bi-arrow-clockwise"></i> 重新上傳</button>
+                        <button class="btn btn-outline-danger btn-sm" id="clearStorageBtn"><i class="bi bi-trash"></i> 清除資料</button>
+                    </div>
                 </div>
-                
-                <div class="mt-3" id="dateStats">
-                    <!-- 日期統計會顯示在這裡 -->
-                </div>
-                <div id="filterInfo" class="filtered-list-info mt-3" style="display: none;">
-                    <i class="bi bi-funnel"></i>
-                    <span id="filterStatus">已過濾名單，只顯示指定人員</span>
-                </div>
+                <select class="form-select form-select-sm mt-2" id="dateSelect"></select>
+                <div id="dateStats" class="mt-2 small"></div>
+                <div id="filterInfo" class="filtered-list-info mt-2" style="display: none;"><i class="bi bi-funnel"></i> <span id="filterStatus"></span></div>
             </div>
 
-            <!-- 班型時間說明（可折疊） -->
-            <div class="card shift-instruction-section shift-instruction-collapse mt-4">
-                <div class="card-header" data-bs-toggle="collapse" href="#shiftInstructionCollapse" role="button" aria-expanded="false" aria-controls="shiftInstructionCollapse">
-                    <h5 class="card-title shift-instruction-title mb-0">
-                        <i class="bi bi-info-circle me-2"></i> 班型時間對照表
-                        <i class="bi bi-chevron-down"></i>
-                    </h5>
+            <!-- 班型對照表 可折疊 -->
+            <div class="card mb-3">
+                <div class="card-header p-2" data-bs-toggle="collapse" href="#shiftInstructionCollapse" role="button" aria-expanded="false" style="background: rgba(67,97,238,0.08); cursor: pointer;">
+                    <h6 class="mb-0 d-flex justify-content-between align-items-center"><span><i class="bi bi-info-circle me-1"></i> 班型時間對照表</span><i class="bi bi-chevron-down"></i></h6>
                 </div>
                 <div class="collapse" id="shiftInstructionCollapse">
-                    <div class="card-body">
-                        <p class="text-muted mb-3">以下為班表代碼與對應時間說明：</p>
-                        
-                        <div class="shift-instruction-grid">
-                            <!-- 第一行 -->
-                            <div class="shift-instruction-row">
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">K0</span>
-                                    <span class="shift-time">05:00 ~ 13:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">M3</span>
-                                    <span class="shift-time">07:00 ~ 15:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">D2</span>
-                                    <span class="shift-time">10:00 ~ 18:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">N1</span>
-                                    <span class="shift-time">14:30 ~ 22:30</span>
-                                </div>
-                            </div>
-                            
-                            <!-- 第二行 -->
-                            <div class="shift-instruction-row">
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">K4</span>
-                                    <span class="shift-time">19:00 ~ 03:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code training-shift">T3</span>
-                                    <span class="shift-time">訓練 08:00 ~ 16:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">M</span>
-                                    <span class="shift-time">05:30 ~ 13:30</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">D</span>
-                                    <span class="shift-time">08:00 ~ 16:00</span>
-                                </div>
-                            </div>
-                            
-                            <!-- 第三行 -->
-                            <div class="shift-instruction-row">
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">D6</span>
-                                    <span class="shift-time">12:00 ~ 20:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">N3</span>
-                                    <span class="shift-time">15:00 ~ 23:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">K5</span>
-                                    <span class="shift-time">21:00 ~ 05:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code training-shift">T2</span>
-                                    <span class="shift-time">訓練 22:30 ~ 06:30</span>
-                                </div>
-                            </div>
-                            
-                            <!-- 第四行 -->
-                            <div class="shift-instruction-row">
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">M1</span>
-                                    <span class="shift-time">06:00 ~ 14:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">D4</span>
-                                    <span class="shift-time">08:00 ~ 16:30</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">K1</span>
-                                    <span class="shift-time">13:30 ~ 21:30</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">N</span>
-                                    <span class="shift-time">16:00 ~ 24:00</span>
-                                </div>
-                            </div>
-                            
-                            <!-- 第五行 -->
-                            <div class="shift-instruction-row">
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">K6</span>
-                                    <span class="shift-time">22:00 ~ 06:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code holiday-shift">Z</span>
-                                    <span class="shift-time">例休日</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code holiday-shift">GBL</span>
-                                    <span class="shift-time">國定補休</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">M2</span>
-                                    <span class="shift-time">06:30 ~ 14:30</span>
-                                </div>
-                            </div>
-                            
-                            <!-- 第六行 -->
-                            <div class="shift-instruction-row">
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">D5</span>
-                                    <span class="shift-time">09:00 ~ 17:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">K2</span>
-                                    <span class="shift-time">14:00 ~ 22:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">K3</span>
-                                    <span class="shift-time">18:00 ~ 02:00</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code">N2</span>
-                                    <span class="shift-time">22:30 ~ 06:30</span>
-                                </div>
-                            </div>
-                            
-                            <!-- 第七行 -->
-                            <div class="shift-instruction-row">
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code holiday-shift">R</span>
-                                    <span class="shift-time">休假日</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code holiday-shift">L</span>
-                                    <span class="shift-time">國內補休</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <span class="shift-code holiday-shift">A</span>
-                                    <span class="shift-time">特休假</span>
-                                </div>
-                                <div class="shift-instruction-item">
-                                    <!-- 空白項目，保持對齊 -->
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-3 text-muted small">
-                            <i class="bi bi-lightbulb"></i> 提示：休假班型以<span class="holiday-shift">橙色</span>顯示，訓練班型以<span class="training-shift">紫色</span>顯示
+                    <div class="card-body p-2">
+                        <div class="row g-1 small">
+                            <div class="col-6 col-md-3"><span class="shift-code">K0</span> 05:00~13:00</div><div class="col-6 col-md-3"><span class="shift-code">M3</span> 07:00~15:00</div>
+                            <div class="col-6 col-md-3"><span class="shift-code">D2</span> 10:00~18:00</div><div class="col-6 col-md-3"><span class="shift-code">N1</span> 14:30~22:30</div>
+                            <div class="col-6 col-md-3"><span class="shift-code">K4</span> 19:00~03:00</div><div class="col-6 col-md-3"><span class="shift-code training-shift">T3</span> 訓練08:00~16:00</div>
+                            <div class="col-6 col-md-3"><span class="shift-code">M</span> 05:30~13:30</div><div class="col-6 col-md-3"><span class="shift-code">D</span> 08:00~16:00</div>
+                            <div class="col-6 col-md-3"><span class="shift-code">D6</span> 12:00~20:00</div><div class="col-6 col-md-3"><span class="shift-code">N3</span> 15:00~23:00</div>
+                            <div class="col-6 col-md-3"><span class="shift-code">K5</span> 21:00~05:00</div><div class="col-6 col-md-3"><span class="shift-code training-shift">T2</span> 訓練22:30~06:30</div>
+                            <div class="col-6 col-md-3"><span class="shift-code">M1</span> 06:00~14:00</div><div class="col-6 col-md-3"><span class="shift-code">D4</span> 08:00~16:30</div>
+                            <div class="col-6 col-md-3"><span class="shift-code">K1</span> 13:30~21:30</div><div class="col-6 col-md-3"><span class="shift-code">N</span> 16:00~24:00</div>
+                            <div class="col-6 col-md-3"><span class="shift-code">K6</span> 22:00~06:00</div><div class="col-6 col-md-3 holiday-shift">Z 例休</div>
+                            <div class="col-6 col-md-3 holiday-shift">GBL 國補</div><div class="col-6 col-md-3"><span class="shift-code">M2</span> 06:30~14:30</div>
+                            <div class="col-6 col-md-3"><span class="shift-code">D5</span> 09:00~17:00</div><div class="col-6 col-md-3"><span class="shift-code">K2</span> 14:00~22:00</div>
+                            <div class="col-6 col-md-3"><span class="shift-code">K3</span> 18:00~02:00</div><div class="col-6 col-md-3"><span class="shift-code">N2</span> 22:30~06:30</div>
+                            <div class="col-6 col-md-3 holiday-shift">R 休日</div><div class="col-6 col-md-3 holiday-shift">L 國內補</div><div class="col-6 col-md-3 holiday-shift">A 特休</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 代領班人員清單 -->
-            <div class="card deputy-list-section mt-4" id="deputyListSection" style="display: none;">
-                <div class="card-body">
-                    <h5 class="card-title deputy-list-title">
-                        <i class="bi bi-person-badge"></i> 代領班人員管理
-                    </h5>
-                    <p class="text-muted mb-3">勾選以下人員標記為「代領班」，卡片背景將變為紅色</p>
-                    <div class="row" id="deputyListContainer">
-                        <!-- 代領班人員清單會在這裡動態產生 -->
-                    </div>
+            <div class="card deputy-list-section mt-2" id="deputyListSection" style="display: none;">
+                <div class="card-body p-2">
+                    <h6 class="deputy-list-title mb-2"><i class="bi bi-person-badge"></i> 代領班標記</h6>
+                    <div class="row" id="deputyListContainer"></div>
                 </div>
             </div>
 
-            <!-- 日期查詢結果 -->
-            <div class="card mt-4" id="dateResultCard">
-                <div class="date-header">
-                    <h4 class="mb-0">
-                        <i class="bi bi-people"></i> 日期查詢結果
-                        <span class="badge bg-light text-primary ms-2" id="resultCount">0人</span>
-                    </h4>
+            <div class="card mt-2" id="dateResultCard">
+                <div class="date-header p-2 bg-primary text-white rounded-top d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-people"></i> 人力配置</h5>
+                    <span class="badge bg-light text-dark" id="resultCount">0人</span>
                 </div>
-                <div class="card-body">
-                    <div id="selectedDateInfo" class="alert alert-primary mb-4" style="display: none;">
-                        <!-- 顯示選擇的日期 -->
-                    </div>
-                    <div id="scheduleResults">
-                        <!-- 班型和人會顯示在這裡 -->
-                    </div>
+                <div class="card-body p-2">
+                    <div id="selectedDateInfo" class="alert alert-primary py-1 px-2 mb-2" style="display: none;"></div>
+                    <div id="scheduleResults"></div>
                 </div>
             </div>
         </div>
     </div>
+    <div class="copy-notification" id="copyNotification"><i class="bi bi-check-circle"></i> 已複製姓名</div>
 
-    <!-- 複製通知 -->
-    <div class="copy-notification" id="copyNotification">
-        <i class="bi bi-check-circle"></i> 已複製到剪貼簿
-    </div>
-
-    <!-- 使用標準xlsx庫，增加對舊版.xls的支援 -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        // 基本配置
-        const shiftColors = {
-            'K0': '#06d6a0', 'M': '#06d6a0', 'M1': '#06d6a0', 'M2': '#06d6a0', 'M3': '#06d6a0',
-            'Z': '#ff9e00', 'R': '#ff9e00', 'GBL': '#ff9e00', 'L': '#ff9e00', 'A': '#ff9e00',
-            '公': '#ff9e00', '福': '#ff9e00', '體檢': '#ff9e00',
-            'K2': '#06d6a0', 'K5': '#06d6a0', 'K6': '#06d6a0', 'N': '#06d6a0', 'D6': '#06d6a0',
-            'D': '#06d6a0', 'D4': '#06d6a0', 'D5': '#06d6a0', 'D2': '#06d6a0'
-        };
-
-        const holidayShifts = ['公', 'R', 'GBL', 'L', 'A', '福', 'Z']; // 移除體檢假
-        const regularShifts = ['K0', 'M', 'M1', 'M2', 'M3', 'K2', 'K5', 'K6', 'N', 'D6', 'D', 'D4', 'D5', 'D2'];
-
-        const shiftDescriptions = {
-            'K0': '05:00 ~ 13:00', 'M': '05:30 ~ 13:30', 'M1': '06:00 ~ 14:00', 'M2': '06:30 ~ 14:30',
-            'M3': '07:00 ~ 15:00', 'D': '08:00 ~ 16:00', 'D2': '10:00 ~ 18:00', 'D4': '08:00 ~ 16:30',
-            'D5': '09:00 ~ 17:00', 'D6': '12:00 ~ 20:00', 'K2': '14:00 ~ 22:00', 'N': '16:00 ~ 24:00',
-            'K5': '21:00 ~ 05:00', 'K6': '22:00 ~ 06:00', 'Z': '例休日', 'R': '休假日',
-            'GBL': '國定補休', 'L': '國內補休', 'A': '特休假', '公': '公假', '福': '福利假', '體檢': '體檢假'
-        };
-
-        // 人員類別定義 - 按照層級順序定義
-        const personnelCategories = {
-            'group-leader': {
-                names: ['馮一民', '嚴奕麟', '范原福'],
-                cssClass: 'group-leader',
-                title: '組長',
-                rank: 1
-            },
-            'foreman': {
-                names: ['劉勝得', '黃茂松', '喬宇民'],
-                cssClass: 'foreman',
-                title: '領班',
-                rank: 2
-            },
-            'authorized-person': {
-                names: ['方彥霖', '蔡宗昌', '陳登峯', '陳枝萬', '林義勳', '王樂美', '黃志傑', '黃弘仁', '楊金雄', '王昱博', '郭鎮溢', '康子平', '張景驊', '劉家泰', '江俊忠', '鍾永源', '陳郁青', '蘇健文', '洪啓晃', '伍丁山', '蔡嘉洋', '曾景松', '林柏辰', '施登元', '胡瓊文'],
-                cssClass: 'authorized-person',
-                title: '授權人員',
-                rank: 3
-            },
-            'm1-person': {
-                names: ['蔡文財', '吳建宗', '張帝如', '高銘論', '陳建旭', '江啓民', '馮宗賢', '黃瑞昌', '蘇權煌', '侯欽仁', '游源正', '余謙和', '江育鐘', '龔義文', '陳冠勛', '林裕斌', '江國棟', '吳世莛', '葉翊楷', '黃浥綸', '楊富雄', '陳科全', '蘇秉豪', '蒲翊青'],
-                cssClass: 'm1-person',
-                title: 'M1人員',
-                rank: 4
-            },
-            'm0-person': {
-                names: ['鄭旭軒', '黃策士', '謝宏望', '莊宇丞', '張馨元', '施孟辰', '林家德', '李宗憲', '楊育承'],
-                cssClass: 'm0-person',
-                title: 'M0人員',
-                rank: 5
-            },
-            'qc-person': {
-                names: ['吳振義', '李家旭'], // QC人員定義保留，但他們會按照班表放到各個班型裡面
-                cssClass: 'qc-person',
-                title: 'QC人員',
-                rank: 6
-            },
-            'administrative-person': {
-                names: ['陳昭良'],
-                cssClass: 'administrative-person',
-                title: '行政人員',
-                rank: 7
-            },
-            'warehouse-person': {
-                names: ['江宜德', '王樂善', '葉長青', '蘇傳靖', '何源運'],
-                cssClass: 'warehouse-person',
-                title: '庫房人員',
-                rank: 8
-            },
-            'random': {
-                names: [],
-                cssClass: 'random-person',
-                title: '其他',
-                rank: 9
-            }
-        };
-
-        // 休假人員顯示順序 - 按照您指定的順序
-        const holidayDisplayOrder = [
-            'group-leader',      // 組長
-            'foreman',           // 領班
-            'authorized-person', // 授權人員
-            'qc-person',         // QC人員
-            'm1-person',         // M1人員
-            'm0-person',         // M0人員
-            'warehouse-person',  // 庫房人員
-            'administrative-person' // 行政人員
-        ];
-
-        // 代領班人員名單
-        const deputyPersonnel = [
-            '陳登峯',
-            '陳枝萬', 
-            '蔡宗昌',
-            '鍾永源',
-            '陳郁青',
-            '林義勳',
-            '劉家泰',
-            '江俊忠'
-        ];
-
-        // 目標人員名單
+        // ======================== 完整資料與邏輯 ========================
         const targetPersonnel = [
-            '馮一民', '嚴奕麟', '范原福', '劉勝得', '黃茂松', '喬宇民', '方彥霖', '蔡宗昌', '陳登峯', '陳枝萬', '林義勳',
-            '王樂美', '黃志傑', '黃弘仁', '楊金雄', '王昱博', '郭鎮溢', '康子平', '張景驊', '蔡文財',
-            '吳建宗', '張帝如', '高銘論', '陳建旭', '鄭旭軒', '江啓民', '馮宗賢', '黃瑞昌', '蘇權煌', '黃策士',
-            '莊宇丞', '劉家泰', '江俊忠', '鍾永源', '陳郁青', '蘇健文', '洪啓晃', '伍丁山', '蔡嘉洋', '曾景松',
-            '林柏辰', '施登元', '侯欽仁', '游源正', '陳冠勛', '吳世莛', '葉翊楷', '黃浥綸', '楊富雄', '胡瓊文',
-            '林裕斌', '江國棟', '謝宏望', '陳科全', '蘇秉豪', '蒲翊青', '張馨元', '施孟辰', '林家德', '李宗憲',
-            '楊育承', '余謙和', '江育鐘', '龔義文', '陳昭良', '吳振義', '李家旭', '江宜德', '王樂善', '葉長青',
-            '蘇傳靖', '何源運'
+            '馮一民','嚴奕麟','范原福','劉勝得','黃茂松','喬宇民','方彥霖','蔡宗昌','陳登峯','陳枝萬','林義勳',
+            '王樂美','黃志傑','黃弘仁','楊金雄','王昱博','郭鎮溢','康子平','張景驊','蔡文財','吳建宗','張帝如',
+            '高銘論','陳建旭','鄭旭軒','江啓民','馮宗賢','黃瑞昌','蘇權煌','黃策士','莊宇丞','劉家泰','江俊忠',
+            '鍾永源','陳郁青','蘇健文','洪啓晃','伍丁山','蔡嘉洋','曾景松','林柏辰','施登元','侯欽仁','游源正',
+            '陳冠勛','吳世莛','葉翊楷','黃浥綸','楊富雄','胡瓊文','林裕斌','江國棟','謝宏望','陳科全','蘇秉豪',
+            '蒲翊青','張馨元','施孟辰','林家德','李宗憲','楊育承','余謙和','江育鐘','龔義文','陳昭良','吳振義',
+            '李家旭','江宜德','王樂善','葉長青','蘇傳靖','何源運'
         ];
-
-        // 資料儲存
-        let scheduleData = [];
-        let allDates = [];
-        let currentFileName = '';
-        let deputyStatus = {}; // 儲存代領班勾選狀態
-        let currentYear = 2026; // 預設年份
-        let currentMonth = 1;   // 預設月份
-        
-        // LocalStorage 金鑰
-        const STORAGE_KEYS = {
-            SCHEDULE_DATA: 'scheduleData_v11',
-            ALL_DATES: 'allDates_v11',
-            FILE_NAME: 'currentFileName_v11',
-            TIMESTAMP: 'lastUpdated_v11',
-            DEPUTY_STATUS: 'deputyStatus_v11',
-            YEAR_MONTH: 'yearMonth_v11'
+        const deputyPersonnel = ['陳登峯','陳枝萬','蔡宗昌','鍾永源','陳郁青','林義勳','劉家泰','江俊忠'];
+        const holidayShifts = ['公','R','GBL','L','A','福','Z'];
+        const regularShifts = ['K0','M','M1','M2','M3','K2','K5','K6','N','D6','D','D4','D5','D2'];
+        const shiftDescriptions = {'K0':'05:00~13:00','M':'05:30~13:30','M1':'06:00~14:00','M2':'06:30~14:30','M3':'07:00~15:00','D':'08:00~16:00','D2':'10:00~18:00','D4':'08:00~16:30','D5':'09:00~17:00','D6':'12:00~20:00','K2':'14:00~22:00','N':'16:00~24:00','K5':'21:00~05:00','K6':'22:00~06:00'};
+        const personnelCategories = {
+            'group-leader':{names:['馮一民','嚴奕麟','范原福'],cssClass:'group-leader',title:'組長',rank:1},
+            'foreman':{names:['劉勝得','黃茂松','喬宇民'],cssClass:'foreman',title:'領班',rank:2},
+            'authorized-person':{names:['方彥霖','蔡宗昌','陳登峯','陳枝萬','林義勳','王樂美','黃志傑','黃弘仁','楊金雄','王昱博','郭鎮溢','康子平','張景驊','劉家泰','江俊忠','鍾永源','陳郁青','蘇健文','洪啓晃','伍丁山','蔡嘉洋','曾景松','林柏辰','施登元','胡瓊文'],cssClass:'authorized-person',title:'授權人員',rank:3},
+            'm1-person':{names:['蔡文財','吳建宗','張帝如','高銘論','陳建旭','江啓民','馮宗賢','黃瑞昌','蘇權煌','侯欽仁','游源正','余謙和','江育鐘','龔義文','陳冠勛','林裕斌','江國棟','吳世莛','葉翊楷','黃浥綸','楊富雄','陳科全','蘇秉豪','蒲翊青'],cssClass:'m1-person',title:'M1人員',rank:4},
+            'm0-person':{names:['鄭旭軒','黃策士','謝宏望','莊宇丞','張馨元','施孟辰','林家德','李宗憲','楊育承'],cssClass:'m0-person',title:'M0人員',rank:5},
+            'qc-person':{names:['吳振義','李家旭'],cssClass:'qc-person',title:'QC人員',rank:6},
+            'administrative-person':{names:['陳昭良'],cssClass:'administrative-person',title:'行政人員',rank:7},
+            'warehouse-person':{names:['江宜德','王樂善','葉長青','蘇傳靖','何源運'],cssClass:'warehouse-person',title:'庫房人員',rank:8},
+            'random':{names:[],cssClass:'random-person',title:'其他',rank:9}
         };
+        const holidayDisplayOrder = ['group-leader','foreman','authorized-person','qc-person','m1-person','m0-person','warehouse-person','administrative-person'];
+
+        let scheduleData = [], allDates = [], currentFileName = '', deputyStatus = {}, currentYear=2026, currentMonth=1;
+        const STORAGE_KEYS = {SCHEDULE_DATA:'scheduleData_v14',ALL_DATES:'allDates_v14',FILE_NAME:'fileName_v14',DEPUTY_STATUS:'deputyStatus_v14',YEAR_MONTH:'yearMonth_v14'};
+
+        function getPersonCategory(name) { for(let c in personnelCategories) if(personnelCategories[c].names.includes(name)) return c; return 'random'; }
+        function analyzeShift(shiftStr){
+            if(!shiftStr || typeof shiftStr!='string') return {normalizedShift:'',isEnglishThreeCharSlash:false,isOtherSlash:false,isHoliday:false};
+            let s=shiftStr.trim();
+            if(s.includes('體')) return {normalizedShift:'體',isEnglishThreeCharSlash:false,isOtherSlash:true,isHoliday:false};
+            if(s.includes('福')) return {normalizedShift:'福',isEnglishThreeCharSlash:false,isOtherSlash:false,isHoliday:true};
+            if(s.includes('公') && s!=='公') return {normalizedShift:'公',isEnglishThreeCharSlash:false,isOtherSlash:false,isHoliday:true};
+            let normalized=s, isEngThree=false, isOther=false, isHoliday=holidayShifts.includes(s);
+            if(s.includes('/')||s.includes('／')){
+                let parts=s.split(/[/／]/); let first=parts[0].trim();
+                isEngThree=/^[A-Za-z]{3}$/.test(first);
+                if(isEngThree) isEngThree=true; else isOther=true;
+                normalized=first;
+            }
+            if(normalized.endsWith('.')) normalized=normalized.slice(0,-1);
+            return {normalizedShift:normalized,isEnglishThreeCharSlash:isEngThree,isOtherSlash:isOther,isHoliday:isHoliday};
+        }
+        function sortByRank(persons){ return persons.sort((a,b)=>((personnelCategories[a.category]?.rank||9)-(personnelCategories[b.category]?.rank||9) || a.name.localeCompare(b.name))); }
         
-        // DOM元素 - 將在DOM載入後初始化
-        let uploadBtn, fileInput, reuploadBtn, clearStorageBtn;
-        let copyNotification, deputyListSection, deputyListContainer;
+        function saveToLocalStorage(data,dates,fn,year,month){ localStorage.setItem(STORAGE_KEYS.SCHEDULE_DATA,JSON.stringify(data)); localStorage.setItem(STORAGE_KEYS.ALL_DATES,JSON.stringify(dates)); localStorage.setItem(STORAGE_KEYS.FILE_NAME,fn); localStorage.setItem(STORAGE_KEYS.YEAR_MONTH,JSON.stringify({year,month})); localStorage.setItem(STORAGE_KEYS.DEPUTY_STATUS,JSON.stringify(deputyStatus)); }
+        function loadFromLocalStorage(){ let data=localStorage.getItem(STORAGE_KEYS.SCHEDULE_DATA), dates=localStorage.getItem(STORAGE_KEYS.ALL_DATES), fn=localStorage.getItem(STORAGE_KEYS.FILE_NAME), ym=localStorage.getItem(STORAGE_KEYS.YEAR_MONTH); if(!data||!dates) return null; try{ let sD=JSON.parse(data), aD=JSON.parse(dates), yearMonth=ym?JSON.parse(ym):{year:2026,month:1}; let dep=localStorage.getItem(STORAGE_KEYS.DEPUTY_STATUS); if(dep) deputyStatus=JSON.parse(dep); return {scheduleData:sD,allDates:aD,fileName:fn||'',year:yearMonth.year,month:yearMonth.month}; }catch(e){return null;} }
+        function clearLocalStorage(){ Object.values(STORAGE_KEYS).forEach(k=>localStorage.removeItem(k)); deputyStatus={}; }
+        function showLoading(){ document.getElementById('loadingSpinner').style.display='block'; document.getElementById('resultSection').style.display='none'; }
+        function hideLoading(){ document.getElementById('loadingSpinner').style.display='none'; document.getElementById('resultSection').style.display='block'; }
+        function showError(msg){ let errDiv=document.getElementById('errorMessage'); errDiv.innerHTML=`<i class="bi bi-exclamation-triangle"></i> ${msg}`; errDiv.style.display='block'; hideLoading(); }
         
-        console.log("初始化每日人力工具...");
-
-        // 複製通知函數
-        function showCopyNotification() {
-            if (!copyNotification) {
-                copyNotification = document.getElementById('copyNotification');
-                if (!copyNotification) return;
+        function parseWorkbook(workbook,fileName){
+            let ws=workbook.Sheets[workbook.SheetNames[0]];
+            let json=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+            if(json.length<3){ showError('檔案格式錯誤'); return; }
+            let year=2026, month=1;
+            if(json[0]&&json[0][0]){ let txt=String(json[0][0]); let yMatch=txt.match(/(\d{4})\s*年/), mMatch=txt.match(/(\d{1,2})\s*月/); if(yMatch) year=parseInt(yMatch[1]); if(mMatch) month=parseInt(mMatch[1]); }
+            let dateRowIdx=-1;
+            for(let i=0;i<Math.min(10,json.length);i++){ let row=json[i]; if(!row) continue; let cnt=0; for(let c=3;c<=33;c++) if(row[c]>=1 && row[c]<=31) cnt++; if(cnt>=5){dateRowIdx=i; break;} }
+            if(dateRowIdx===-1) dateRowIdx=1;
+            let dateRow=json[dateRowIdx], dates=[];
+            for(let col=3;col<=33;col++){ let val=dateRow[col]; if(val>=1 && val<=31){ let dayIdx=(val-1)%7; let dow=['日','一','二','三','四','五','六'][dayIdx]; dates.push({colIndex:col,date:val,dayOfWeek:dow,year,month}); } }
+            if(dates.length===0){ showError('找不到日期列'); return; }
+            let nameCol=2, schedule=[];
+            for(let r=dateRowIdx+1;r<json.length;r++){
+                let row=json[r]; if(!row||!row[nameCol]) continue;
+                let name=String(row[nameCol]).trim();
+                if(!targetPersonnel.includes(name)) continue;
+                let shifts={}, has=false;
+                dates.forEach(d=>{ let v=row[d.colIndex]; if(v&&v!==''){ let sv=String(v).trim(); if(sv.startsWith('=')) return; let ana=analyzeShift(sv); if(ana.normalizedShift){ shifts[d.date]={shift:ana.normalizedShift,originalShift:sv,isEnglishThreeCharSlash:ana.isEnglishThreeCharSlash,isOtherSlash:ana.isOtherSlash,isHoliday:ana.isHoliday}; has=true; } } });
+                if(has) schedule.push({name,category:getPersonCategory(name),shifts});
             }
-            copyNotification.classList.add('show');
-            setTimeout(() => {
-                copyNotification.classList.remove('show');
-            }, 2000);
+            if(schedule.length===0){ showError('無目標人員資料'); return; }
+            scheduleData=schedule; allDates=dates; currentFileName=fileName; currentYear=year; currentMonth=month;
+            saveToLocalStorage(scheduleData,allDates,fileName,year,month);
+            updateDateSelect(); updateDateStats(); updateDeputyListDisplay();
+            hideLoading(); document.getElementById('fileInfo').style.display='none'; document.getElementById('resultSection').style.display='block'; document.getElementById('filterInfo').style.display='block'; document.getElementById('filterStatus').innerHTML=`已過濾 ${schedule.length} 人 (${fileName})`;
+            showSelectedDateSchedule();
         }
-
-        // 設定複製功能
-        function setupCopyFunctionality() {
-            // 點擊人名複製到剪貼簿
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('person-name') || 
-                    e.target.closest('.person-name')) {
-                    
-                    const nameElement = e.target.classList.contains('person-name') 
-                        ? e.target 
-                        : e.target.closest('.person-name');
-                    
-                    // 獲取姓名（移除代領班標記和點擊複製姓名文字）
-                    let nameText = nameElement.textContent;
-                    nameText = nameText.replace('點擊複製姓名', '').trim();
-                    nameText = nameText.replace('代領班', '').trim();
-                    
-                    // 複製到剪貼簿
-                    navigator.clipboard.writeText(nameText).then(function() {
-                        // 顯示視覺回饋
-                        nameElement.classList.add('copied');
-                        setTimeout(() => {
-                            nameElement.classList.remove('copied');
-                        }, 1000);
-                        
-                        // 顯示通知
-                        showCopyNotification();
-                        
-                        console.log('已複製姓名:', nameText);
-                    }).catch(function(err) {
-                        console.error('複製失敗:', err);
-                        // 備用方法
-                        const textArea = document.createElement('textarea');
-                        textArea.value = nameText;
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(textArea);
-                        
-                        // 顯示視覺回饋
-                        nameElement.classList.add('copied');
-                        setTimeout(() => {
-                            nameElement.classList.remove('copied');
-                        }, 1000);
-                        
-                        showCopyNotification();
-                    });
-                }
-            });
+        function handleFile(file){ currentFileName=file.name; document.getElementById('fileInfo').style.display='block'; document.getElementById('fileName').innerHTML=`處理: ${file.name}`; document.getElementById('errorMessage').style.display='none'; showLoading(); let reader=new FileReader(); reader.onload=e=>{ try{ let wb=XLSX.read(e.target.result,{type:'binary'}); parseWorkbook(wb,file.name); }catch(err){ showError('解析失敗:'+err.message); } }; reader.onerror=()=>showError('讀取失敗'); reader.readAsBinaryString(file); }
+        function updateDateSelect(){ let sel=document.getElementById('dateSelect'); sel.innerHTML=''; allDates.forEach(d=>{ let opt=document.createElement('option'); opt.value=d.date; opt.textContent=`${d.year}/${d.month}/${d.date} (${d.dayOfWeek})`; sel.appendChild(opt); }); if(allDates.length) sel.selectedIndex=0; }
+        function updateDateStats(){ let statsDiv=document.getElementById('dateStats'); if(allDates.length) statsDiv.innerHTML=`<div class="alert alert-light py-1 mb-0"><i class="bi bi-calendar-range"></i> ${allDates[0].year}年${allDates[0].month}月 ${allDates[0].date}~${allDates[allDates.length-1].date} ・ 人員${scheduleData.length}</div>`; }
+        function updateDeputyListDisplay(){ let container=document.getElementById('deputyListContainer'); if(!container) return; container.innerHTML=''; let hasAny=false; deputyPersonnel.forEach(name=>{ if(scheduleData.some(p=>p.name===name)){ hasAny=true; let isChecked=!!deputyStatus[name]; let col=document.createElement('div'); col.className='col-6 col-md-3 mb-1'; col.innerHTML=`<div class="d-flex align-items-center p-1 border rounded"><input type="checkbox" class="deputy-checkbox me-1" id="dep-${name}" data-name="${name}" ${isChecked?'checked':''}><label class="small mb-0 ${isChecked?'fw-bold text-danger':''}" for="dep-${name}">${name}</label></div>`; container.appendChild(col); } }); document.getElementById('deputyListSection').style.display=hasAny?'block':'none'; document.querySelectorAll('.deputy-checkbox').forEach(cb=>cb.addEventListener('change',function(){ let nm=this.dataset.name; deputyStatus[nm]=this.checked; saveToLocalStorage(scheduleData,allDates,currentFileName,currentYear,currentMonth); updateDeputyListDisplay(); applyDeputyStatusToCards(); showSelectedDateSchedule(); })); }
+        function applyDeputyStatusToCards(){ document.querySelectorAll('.person-card').forEach(card=>{ let nameElem=card.querySelector('.person-name'); if(nameElem){ let name=nameElem.innerText.replace('代領班','').trim(); if(deputyStatus[name]){ card.classList.add('deputy-card'); if(!card.querySelector('.deputy-badge')) nameElem.insertAdjacentHTML('beforeend','<span class="deputy-badge ms-1">代領班</span>'); }else{ card.classList.remove('deputy-card'); let badge=card.querySelector('.deputy-badge'); if(badge) badge.remove(); } } }); }
+        
+        // 核心顯示函數，移除所有「點擊複製姓名」文字
+        function showSelectedDateSchedule(){
+            let date=parseInt(document.getElementById('dateSelect').value); if(!date) return;
+            let shiftGroups={}, total=0; scheduleData.forEach(p=>{ let sd=p.shifts[date]; if(sd){ if(!shiftGroups[sd.shift]) shiftGroups[sd.shift]=[]; shiftGroups[sd.shift].push({name:p.name,shift:sd.shift,originalShift:sd.originalShift,isEnglishThreeCharSlash:sd.isEnglishThreeCharSlash,isOtherSlash:sd.isOtherSlash,isHoliday:sd.isHoliday,category:p.category}); total++; } });
+            document.getElementById('resultCount').innerText=total+'人'; let container=document.getElementById('scheduleResults'); container.innerHTML='';
+            if(total===0){ container.innerHTML='<div class="alert alert-warning">無出勤人員</div>'; return; }
+            let special=[], random=[], regular={}, holiday=[], warehouse=[], admin=[];
+            Object.values(shiftGroups).flat().forEach(p=>{ if(p.isHoliday||holidayShifts.includes(p.shift)) holiday.push(p); else if(p.category==='warehouse-person') warehouse.push(p); else if(p.category==='administrative-person') admin.push(p); else if(p.isOtherSlash) special.push(p); else if(p.isEnglishThreeCharSlash) random.push(p); else if(regularShifts.includes(p.shift)){ if(!regular[p.shift]) regular[p.shift]=[]; regular[p.shift].push(p); } else random.push(p); });
+            
+            function renderGroup(title,cssClass,persons,showTime=false){ if(!persons.length) return; let sec=document.createElement('div'); sec.className=`shift-section ${cssClass}`; sec.innerHTML=`<div class="shift-title ${cssClass.split('-')[0]}-title"><span>${title}</span><span class="float-end">${persons.length}</span></div><div class="row" id="tmp-${Date.now()}-${Math.random()}"></div>`; container.appendChild(sec); let row=sec.querySelector('.row'); let sorted=sortByRank(persons); let lastRank=null; sorted.forEach(p=>{ let cat=p.category||'random'; let cssCls=personnelCategories[cat]?.cssClass || 'random-person'; if(lastRank!==cat){ if(lastRank!==null) row.appendChild(document.createElement('hr')).className='rank-divider'; let titleDiv=document.createElement('div'); titleDiv.className='rank-title'; titleDiv.innerText=personnelCategories[cat]?.title||'其他'; row.appendChild(titleDiv); lastRank=cat; } let col=document.createElement('div'); col.className='col-6 col-sm-4 col-md-3 mb-2'; let isDep=!!deputyStatus[p.name]; let depBadge=isDep?'<span class="deputy-badge">代領班</span>':''; let timeHtml=(showTime && shiftDescriptions[p.shift])?`<div class="shift-description">${shiftDescriptions[p.shift]}</div>`:(p.originalShift?`<div class="shift-description">${p.originalShift}</div>`:''); col.innerHTML=`<div class="person-card ${cssCls} ${isDep?'deputy-card':''}"><div class="person-name">${p.name}${depBadge}</div>${timeHtml}</div>`; row.appendChild(col); }); }
+            function renderRegular(){ let order=['K0','M','M1','M2','M3','D','D2','D4','D5','D6','K2','N','K5','K6']; order.forEach(sh=>{ if(regular[sh]){ let persons=regular[sh]; let sec=document.createElement('div'); sec.className='shift-section regular-shift-section'; sec.innerHTML=`<div class="shift-title work-shift-title"><span class="badge bg-success">${sh}</span> <small>${shiftDescriptions[sh]||''}</small><span class="float-end">${persons.length}</span></div><div class="row" id="reg-${sh}"></div>`; container.appendChild(sec); let row=sec.querySelector('.row'); let sorted=sortByRank(persons); let lastRank=null; sorted.forEach(p=>{ let cat=p.category||'random'; let cssCls=personnelCategories[cat]?.cssClass || 'random-person'; if(lastRank!==cat){ if(lastRank) row.appendChild(document.createElement('hr')).className='rank-divider'; let titleDiv=document.createElement('div'); titleDiv.className='rank-title'; titleDiv.innerText=personnelCategories[cat]?.title||'其他'; row.appendChild(titleDiv); lastRank=cat; } let col=document.createElement('div'); col.className='col-6 col-sm-4 col-md-3 mb-2'; let isDep=!!deputyStatus[p.name]; col.innerHTML=`<div class="person-card ${cssCls} ${isDep?'deputy-card':''}"><div class="person-name">${p.name}${isDep?'<span class="deputy-badge">代領班</span>':''}</div></div>`; row.appendChild(col); }); } }); }
+            renderGroup('特殊班型','special-section',special,true);
+            renderGroup('隨機班型','random-section',random,true);
+            renderRegular();
+            if(warehouse.length){ let sec=document.createElement('div'); sec.className='shift-section warehouse-section'; sec.innerHTML=`<div class="shift-title warehouse-title">🏚️ 庫房人員 <span class="float-end">${warehouse.length}</span></div><div class="row" id="wh-rows"></div>`; container.appendChild(sec); let row=sec.querySelector('.row'); let byShift={}; warehouse.forEach(p=>{if(!byShift[p.shift]) byShift[p.shift]=[]; byShift[p.shift].push(p);}); for(let sh in byShift){ let shiftPersons=byShift[sh]; let titleDiv=document.createElement('div'); titleDiv.className='warehouse-shift-title w-100 mt-1'; titleDiv.innerText=`${sh} ${shiftDescriptions[sh]||''} (${shiftPersons.length})`; row.appendChild(titleDiv); shiftPersons.forEach(p=>{ let col=document.createElement('div'); col.className='col-6 col-sm-4 col-md-3 mb-2'; let isDep=!!deputyStatus[p.name]; let cssCls=personnelCategories[p.category]?.cssClass || 'warehouse-person'; col.innerHTML=`<div class="person-card ${cssCls} ${isDep?'deputy-card':''}"><div class="person-name">${p.name}${isDep?'<span class="deputy-badge">代領班</span>':''}</div></div>`; row.appendChild(col); }); } }
+            if(admin.length){ let sec=document.createElement('div'); sec.className='shift-section administrative-section'; sec.innerHTML=`<div class="shift-title administrative-title">📋 行政人員 <span class="float-end">${admin.length}</span></div><div class="row"></div>`; container.appendChild(sec); let row=sec.querySelector('.row'); admin.forEach(p=>{ let col=document.createElement('div'); col.className='col-6 col-sm-4 col-md-3 mb-2'; let isDep=!!deputyStatus[p.name]; let cssCls=personnelCategories[p.category]?.cssClass || 'administrative-person'; col.innerHTML=`<div class="person-card ${cssCls} ${isDep?'deputy-card':''}"><div class="person-name">${p.name}${isDep?'<span class="deputy-badge">代領班</span>':''}<div class="shift-description">${shiftDescriptions[p.shift]||p.originalShift||''}</div></div></div>`; row.appendChild(col); }); }
+            if(holiday.length){ let sec=document.createElement('div'); sec.className='shift-section holiday-section'; let collapseId='holiday-'+Date.now(); sec.innerHTML=`<div class="shift-title holiday-title">🌴 休假人員 <span class="float-end">${holiday.length}</span></div><div><button class="btn btn-light btn-sm w-100 holiday-toggle-btn" data-bs-toggle="collapse" data-bs-target="#${collapseId}"><i class="bi bi-chevron-down"></i> 展開/收合 (${holiday.length}人)</button><div class="collapse" id="${collapseId}"><div class="collapse-content p-2" id="holidayContent"></div></div></div>`; container.appendChild(sec); let holidayDiv=sec.querySelector('#holidayContent'); let grouped={}; holiday.forEach(p=>{ let cat=p.category||'other'; if(!grouped[cat]) grouped[cat]=[]; grouped[cat].push(p); }); holidayDisplayOrder.forEach(cat=>{ if(grouped[cat] && grouped[cat].length){ let titleDiv=document.createElement('div'); titleDiv.className=`holiday-category-title ${cat}-title`; titleDiv.innerText=`${personnelCategories[cat]?.title||cat} (${grouped[cat].length})`; holidayDiv.appendChild(titleDiv); let rowDiv=document.createElement('div'); rowDiv.className='row'; grouped[cat].forEach(p=>{ let col=document.createElement('div'); col.className='col-6 col-sm-4 col-md-3 mb-2'; let isDep=!!deputyStatus[p.name]; let cssCls=personnelCategories[cat]?.cssClass || 'random-person'; col.innerHTML=`<div class="person-card ${cssCls} ${isDep?'deputy-card':''}"><div class="person-name">${p.name}${isDep?'<span class="deputy-badge">代領班</span>':''}</div></div>`; rowDiv.appendChild(col); }); holidayDiv.appendChild(rowDiv); } }); }
+            setTimeout(()=>{ document.querySelectorAll('.person-card').forEach(card=>{ if(!card.hasAttribute('data-listener')){ card.setAttribute('data-listener','true'); card.addEventListener('click',(e)=>{ let nameSpan=card.querySelector('.person-name'); if(nameSpan){ let name=nameSpan.innerText.replace('代領班','').trim(); navigator.clipboard.writeText(name); let notify=document.getElementById('copyNotification'); notify.classList.add('show'); setTimeout(()=>notify.classList.remove('show'),1500); } }); } }); applyDeputyStatusToCards(); },50);
         }
-
-        // 儲存代領班狀態到LocalStorage
-        function saveDeputyStatus() {
-            try {
-                localStorage.setItem(STORAGE_KEYS.DEPUTY_STATUS, JSON.stringify(deputyStatus));
-                console.log("代領班狀態已儲存到 LocalStorage");
-            } catch (error) {
-                console.error("儲存代領班狀態失敗:", error);
-            }
-        }
-
-        // 從LocalStorage載入代領班狀態
-        function loadDeputyStatus() {
-            try {
-                const deputyStatusStr = localStorage.getItem(STORAGE_KEYS.DEPUTY_STATUS);
-                if (deputyStatusStr) {
-                    deputyStatus = JSON.parse(deputyStatusStr);
-                    console.log("從 LocalStorage 載入代領班狀態");
-                } else {
-                    deputyStatus = {};
-                    console.log("LocalStorage 中沒有代領班狀態，使用預設");
-                }
-            } catch (error) {
-                console.error("載入代領班狀態失敗:", error);
-                deputyStatus = {};
-            }
-        }
-
-        // 更新代領班狀態
-        function updateDeputyStatus(name, isDeputy) {
-            deputyStatus[name] = isDeputy;
-            saveDeputyStatus();
-            
-            // 更新顯示
-            updateDeputyListDisplay();
-            applyDeputyStatusToCards();
-        }
-
-        // 初始化：檢查是否有儲存的資料
-        function init() {
-            console.log("初始化應用程式...");
-            
-            // 初始化DOM元素
-            uploadBtn = document.getElementById('uploadBtn');
-            fileInput = document.getElementById('fileInput');
-            reuploadBtn = document.getElementById('reuploadBtn');
-            clearStorageBtn = document.getElementById('clearStorageBtn');
-            copyNotification = document.getElementById('copyNotification');
-            deputyListSection = document.getElementById('deputyListSection');
-            deputyListContainer = document.getElementById('deputyListContainer');
-            
-            console.log("DOM元素檢查:", {
-                uploadBtn: !!uploadBtn,
-                fileInput: !!fileInput,
-                reuploadBtn: !!reuploadBtn,
-                clearStorageBtn: !!clearStorageBtn
-            });
-            
-            // 載入代領班狀態
-            loadDeputyStatus();
-            
-            // 設定事件監聽器
-            setupEventListeners();
-            
-            // 設定複製功能
-            setupCopyFunctionality();
-            
-            // 檢查本地是否有儲存的資料
-            const savedData = loadFromLocalStorage();
-            if (savedData) {
-                console.log("找到本地儲存的資料，自動載入...");
-                scheduleData = savedData.scheduleData;
-                allDates = savedData.allDates;
-                currentFileName = savedData.fileName || '';
-                currentYear = savedData.year || 2026;
-                currentMonth = savedData.month || 1;
-                
-                // 更新介面
-                updateDateSelect();
-                updateDateStats();
-                updateDeputyListDisplay();
-                document.getElementById('resultSection').style.display = 'block';
-                document.getElementById('filterInfo').style.display = 'block';
-                document.getElementById('filterStatus').textContent = 
-                    `使用本地儲存資料 (${currentFileName})，共 ${scheduleData.length} 人`;
-                
-                // 顯示日期查詢結果
-                if (scheduleData.length > 0) {
-                    showSelectedDateSchedule();
-                }
-            }
-        }
-
-        // 設定事件監聽器 - 簡化版本
-        function setupEventListeners() {
-            console.log("設定事件監聽器...");
-            
-            // 檔案上傳按鈕
-            if (uploadBtn) {
-                uploadBtn.addEventListener('click', function(e) {
-                    console.log("上傳按鈕被點擊");
-                    if (fileInput) {
-                        fileInput.click();
-                    }
-                });
-            }
-            
-            // 檔案選擇變化
-            if (fileInput) {
-                fileInput.addEventListener('change', function(e) {
-                    const file = e.target.files[0];
-                    if (file) {
-                        console.log("已選擇檔案:", file.name);
-                        handleFile(file);
-                    }
-                });
-            }
-            
-            // 重新上傳按鈕
-            if (reuploadBtn) {
-                reuploadBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    console.log("重新上傳按鈕被點擊");
-                    if (fileInput) {
-                        fileInput.click();
-                    }
-                });
-            }
-            
-            // 清除本地資料按鈕
-            if (clearStorageBtn) {
-                clearStorageBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (confirm("確定要清除所有本地儲存的資料嗎？包括代領班勾選狀態？")) {
-                        clearLocalStorage();
-                        location.reload();
-                    }
-                });
-            }
-            
-            // 日期選擇事件
-            const dateSelect = document.getElementById('dateSelect');
-            if (dateSelect) {
-                dateSelect.addEventListener('change', function() {
-                    showSelectedDateSchedule();
-                });
-            }
-            
-            console.log("事件監聽器設定完成");
-        }
-
-        // 處理檔案
-        function handleFile(file) {
-            currentFileName = file.name;
-            
-            // 顯示檔案資訊
-            document.getElementById('fileInfo').style.display = 'block';
-            document.getElementById('fileName').textContent = `正在處理: ${file.name}`;
-            document.getElementById('errorMessage').style.display = 'none';
-            
-            // 顯示載入動畫
-            showLoading();
-            
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const data = e.target.result;
-                    const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
-                    
-                    // 解析工作簿
-                    parseWorkbook(workbook, file.name);
-                    
-                } catch (error) {
-                    console.error("解析錯誤:", error);
-                    showError(`解析檔案時發生錯誤: ${error.message}`);
-                }
-            };
-            
-            reader.onerror = function() {
-                showError("讀取檔案失敗，請重新選擇");
-            };
-            
-            reader.readAsBinaryString(file);
-        }
-
-        // 解析工作簿
-        function parseWorkbook(workbook, fileName) {
-            scheduleData = [];
-            allDates = [];
-            
-            try {
-                // 使用第一個工作表
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                
-                // 將工作表轉換為JSON格式
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-                
-                if (jsonData.length < 3) {
-                    showError('Excel資料行數不足，請確認檔案格式');
-                    return;
-                }
-                
-                // 讀取年份和月份（從A1儲存格）
-                currentYear = 2026; // 預設值
-                currentMonth = 1;   // 預設值
-                
-                // 嘗試從第一行第一列讀取年份月份
-                if (jsonData[0] && jsonData[0][0]) {
-                    const yearMonthCell = String(jsonData[0][0]).trim();
-                    console.log("年份月份單元格內容:", yearMonthCell);
-                    
-                    // 使用正則表達式提取年份和月份
-                    const yearMatch = yearMonthCell.match(/(\d{4})\s*年/);
-                    const monthMatch = yearMonthCell.match(/(\d{1,2})\s*月/);
-                    
-                    if (yearMatch) {
-                        currentYear = parseInt(yearMatch[1]);
-                        console.log("解析到的年份:", currentYear);
-                    }
-                    
-                    if (monthMatch) {
-                        currentMonth = parseInt(monthMatch[1]);
-                        console.log("解析到的月份:", currentMonth);
-                    }
-                }
-                
-                console.log("使用的年份月份:", currentYear, "年", currentMonth, "月");
-                
-                // 尋找日期行
-                let dateRowIndex = -1;
-                for (let rowIndex = 0; rowIndex < Math.min(10, jsonData.length); rowIndex++) {
-                    const row = jsonData[rowIndex];
-                    if (!row) continue;
-                    
-                    let dateCount = 0;
-                    for (let colIndex = 0; colIndex < row.length; colIndex++) {
-                        const cellValue = row[colIndex];
-                        if (cellValue !== undefined && cellValue !== null && cellValue !== '') {
-                            const numValue = Number(cellValue);
-                            if (!isNaN(numValue) && numValue >= 1 && numValue <= 31) {
-                                dateCount++;
-                            }
-                        }
-                    }
-                    
-                    if (dateCount >= 5) {
-                        dateRowIndex = rowIndex;
-                        break;
-                    }
-                }
-                
-                if (dateRowIndex === -1) {
-                    dateRowIndex = 1; // 預設第二行
-                }
-                
-                const dateRow = jsonData[dateRowIndex];
-                
-                // 解析日期
-                for (let colIndex = 3; colIndex <= 33; colIndex++) {
-                    const cellValue = dateRow[colIndex];
-                    if (cellValue !== undefined && cellValue !== null && cellValue !== '') {
-                        let dateNum = Number(cellValue);
-                        
-                        if (!isNaN(dateNum) && dateNum >= 1 && dateNum <= 31) {
-                            const firstDayOfMonth = 1;
-                            const dayIndex = (dateNum - 1 + (firstDayOfMonth - 1)) % 7;
-                            const dayOfWeek = getDayOfWeek(dayIndex);
-                            
-                            allDates.push({
-                                colIndex: colIndex,
-                                date: dateNum,
-                                dayOfWeek: dayOfWeek,
-                                year: currentYear,
-                                month: currentMonth
-                            });
-                        }
-                    }
-                }
-                
-                if (allDates.length === 0) {
-                    showError('找不到日期資料，請確認Excel格式正確');
-                    return;
-                }
-                
-                // 尋找姓名列 (預設C欄，索引2)
-                const nameColumnIndex = 2;
-                
-                // 解析人員資料
-                const startRowIndex = dateRowIndex + 1;
-                const foundTargetNames = new Set();
-                
-                for (let rowIndex = startRowIndex; rowIndex < jsonData.length; rowIndex++) {
-                    const row = jsonData[rowIndex];
-                    if (!row || row.length <= nameColumnIndex) continue;
-                    
-                    // 獲取姓名
-                    const rawName = row[nameColumnIndex];
-                    if (rawName === undefined || rawName === null || rawName === '') {
-                        continue;
-                    }
-                    
-                    const excelName = String(rawName).trim();
-                    
-                    // 檢查是否在目標名單中
-                    if (!targetPersonnel.includes(excelName)) {
-                        continue;
-                    }
-                    
-                    // 獲取人員類別
-                    const personCategory = getPersonCategory(excelName);
-                    
-                    // 解析每天的班型
-                    const shifts = {};
-                    let hasShiftData = false;
-                    
-                    allDates.forEach(dateInfo => {
-                        const shiftValue = row[dateInfo.colIndex];
-                        if (shiftValue !== undefined && shiftValue !== null && shiftValue !== '') {
-                            let shiftStr = String(shiftValue).trim();
-                            
-                            if (shiftStr.startsWith('=')) {
-                                return; // 跳過公式
-                            }
-                            
-                            // 保存原始班型字串
-                            const originalShift = shiftStr;
-                            
-                            // 分析班型
-                            const shiftAnalysis = analyzeShift(shiftStr);
-                            
-                            if (shiftAnalysis.normalizedShift !== '') {
-                                shifts[dateInfo.date] = {
-                                    shift: shiftAnalysis.normalizedShift,
-                                    originalShift: originalShift,
-                                    isEnglishThreeCharSlash: shiftAnalysis.isEnglishThreeCharSlash,
-                                    isOtherSlash: shiftAnalysis.isOtherSlash,
-                                    isHoliday: shiftAnalysis.isHoliday
-                                };
-                                hasShiftData = true;
-                            }
-                        }
-                    });
-                    
-                    // 保存人員資料
-                    if (hasShiftData) {
-                        scheduleData.push({
-                            name: excelName,
-                            category: personCategory,
-                            shifts: shifts
-                        });
-                        foundTargetNames.add(excelName);
-                    }
-                }
-                
-                if (scheduleData.length === 0) {
-                    showError('在Excel中找不到指定名單的人員資料');
-                    return;
-                }
-                
-                // 儲存到 LocalStorage
-                saveToLocalStorage(scheduleData, allDates, fileName, currentYear, currentMonth);
-                
-                // 更新介面
-                updateDateSelect();
-                
-                // 顯示結果
-                setTimeout(() => {
-                    hideLoading();
-                    updateDateStats();
-                    updateDeputyListDisplay();
-                    document.getElementById('fileInfo').style.display = 'none';
-                    document.getElementById('resultSection').style.display = 'block';
-                    document.getElementById('filterInfo').style.display = 'block';
-                    document.getElementById('filterStatus').textContent = 
-                        `已過濾名單，找到 ${foundTargetNames.size} 人`;
-                    
-                    // 顯示日期查詢結果
-                    showSelectedDateSchedule();
-                }, 500);
-                
-            } catch (error) {
-                console.error('解析過程錯誤:', error);
-                showError('解析過程發生錯誤: ' + error.message);
-            }
-        }
-
-        // 輔助函數
-        function getPersonCategory(name) {
-            for (const category in personnelCategories) {
-                if (personnelCategories[category].names.includes(name)) {
-                    return category;
-                }
-            }
-            return 'random';
-        }
-
-        // 分析班型 - 所有包含「體」的班型都歸類為特殊班型
-        function analyzeShift(shiftStr) {
-            if (!shiftStr || typeof shiftStr !== 'string') {
-                return {
-                    normalizedShift: '',
-                    isEnglishThreeCharSlash: false,
-                    isOtherSlash: false,
-                    isHoliday: false
-                };
-            }
-            
-            shiftStr = shiftStr.trim();
-            
-            // 檢查是否包含「體」字
-            if (shiftStr.includes('體')) {
-                return {
-                    normalizedShift: '體',
-                    isEnglishThreeCharSlash: false,
-                    isOtherSlash: true,  // 歸類為特殊班型
-                    isHoliday: false     // 不是休假
-                };
-            }
-            
-            // 處理福利假
-            if (shiftStr.includes('福')) {
-                return {
-                    normalizedShift: '福',
-                    isEnglishThreeCharSlash: false,
-                    isOtherSlash: false,
-                    isHoliday: true
-                };
-            }
-            
-            // 處理公假
-            if (shiftStr.includes('公') && shiftStr !== '公') {
-                return {
-                    normalizedShift: '公',
-                    isEnglishThreeCharSlash: false,
-                    isOtherSlash: false,
-                    isHoliday: true
-                };
-            }
-            
-            let normalized = shiftStr;
-            let isEnglishThreeCharSlash = false;
-            let isOtherSlash = false;
-            let isHoliday = false;
-            
-            // 檢查是否為休假班型
-            if (holidayShifts.includes(shiftStr)) {
-                isHoliday = true;
-            }
-            
-            // 檢查是否有斜線
-            const hasSlash = shiftStr.includes('/') || shiftStr.includes('／');
-            
-            if (hasSlash) {
-                // 處理斜線
-                const slashChar = shiftStr.includes('/') ? '/' : '／';
-                const parts = shiftStr.split(slashChar);
-                const firstPart = parts[0].trim();
-                
-                // 新規則：只有當斜線前是三個英文字母時才算隨機班型
-                const isEnglishThreeChar = /^[A-Za-z]{3}$/.test(firstPart);
-                
-                if (isEnglishThreeChar) {
-                    isEnglishThreeCharSlash = true;
-                } else {
-                    isOtherSlash = true;
-                }
-                
-                normalized = firstPart;
-            }
-            
-            // 處理點號結尾
-            if (normalized.endsWith('.')) {
-                normalized = normalized.slice(0, -1);
-            }
-            
-            return {
-                normalizedShift: normalized,
-                isEnglishThreeCharSlash: isEnglishThreeCharSlash,
-                isOtherSlash: isOtherSlash,
-                isHoliday: isHoliday
-            };
-        }
-
-        function getDayOfWeek(dayIndex) {
-            const days = ['日', '一', '二', '三', '四', '五', '六'];
-            return days[dayIndex];
-        }
-
-        function getShiftCategory(shift) {
-            if (holidayShifts.includes(shift)) {
-                return 'holiday';
-            }
-            if (regularShifts.includes(shift)) {
-                return 'regular';
-            }
-            return 'random';
-        }
-
-        // 根據層級排序人員
-        function sortByRank(persons) {
-            return persons.sort((a, b) => {
-                const rankA = personnelCategories[a.category] ? personnelCategories[a.category].rank : 9;
-                const rankB = personnelCategories[b.category] ? personnelCategories[b.category].rank : 9;
-                
-                // 先按層級排序
-                if (rankA !== rankB) {
-                    return rankA - rankB;
-                }
-                
-                // 同層級按姓名排序
-                return a.name.localeCompare(b.name);
-            });
-        }
-
-        // 更新日期選單
-        function updateDateSelect() {
-            const dateSelect = document.getElementById('dateSelect');
-            if (!dateSelect) return;
-            
-            dateSelect.innerHTML = '';
-            
-            allDates.forEach(dateInfo => {
-                const option = document.createElement('option');
-                option.value = dateInfo.date;
-                option.textContent = `${dateInfo.year}年${dateInfo.month}月${dateInfo.date}日 (星期${dateInfo.dayOfWeek})`;
-                dateSelect.appendChild(option);
-            });
-            
-            if (allDates.length > 0) {
-                dateSelect.selectedIndex = 0;
-            }
-        }
-
-        // 更新日期統計
-        function updateDateStats() {
-            if (allDates.length > 0 && scheduleData.length > 0) {
-                const firstDate = allDates[0].date;
-                const lastDate = allDates[allDates.length - 1].date;
-                const year = allDates[0].year || currentYear;
-                const month = allDates[0].month || currentMonth;
-                
-                const dateStatsElement = document.getElementById('dateStats');
-                if (dateStatsElement) {
-                    dateStatsElement.innerHTML = `
-                        <div class="alert alert-light">
-                            <i class="bi bi-calendar-range"></i>
-                            <strong>資料範圍：</strong>${year}年${month}月${firstDate}日 ~ ${year}年${month}月${lastDate}日
-                            <span class="ms-3"><strong>目標人員：</strong>${scheduleData.length}人</span>
-                        </div>
-                    `;
-                }
-            }
-        }
-
-        // 更新代領班人員清單顯示
-        function updateDeputyListDisplay() {
-            if (!deputyListContainer) return;
-            
-            deputyListContainer.innerHTML = '';
-            
-            if (scheduleData.length === 0) {
-                if (deputyListSection) {
-                    deputyListSection.style.display = 'none';
-                }
-                return;
-            }
-            
-            // 檢查是否有代領班人員在名單中
-            let hasDeputyPersonnel = false;
-            
-            deputyPersonnel.forEach(name => {
-                // 檢查該人員是否在scheduleData中
-                const personExists = scheduleData.some(person => person.name === name);
-                if (personExists) {
-                    hasDeputyPersonnel = true;
-                    
-                    const isChecked = deputyStatus[name] || false;
-                    
-                    const col = document.createElement('div');
-                    col.className = 'col-md-3 col-sm-4 col-6 mb-2';
-                    
-                    col.innerHTML = `
-                        <div class="d-flex align-items-center p-2 border rounded">
-                            <input type="checkbox" class="deputy-checkbox" id="deputy-${name}" 
-                                   ${isChecked ? 'checked' : ''} data-name="${name}">
-                            <label class="deputy-label ms-2 ${isChecked ? 'checked' : ''}" for="deputy-${name}">
-                                ${name}
-                                ${isChecked ? '<span class="deputy-badge">代領班</span>' : ''}
-                            </label>
-                        </div>
-                    `;
-                    
-                    deputyListContainer.appendChild(col);
-                }
-            });
-            
-            if (hasDeputyPersonnel && deputyListSection) {
-                deputyListSection.style.display = 'block';
-                
-                // 綁定勾選框事件
-                setTimeout(() => {
-                    const checkboxes = document.querySelectorAll('.deputy-checkbox');
-                    checkboxes.forEach(checkbox => {
-                        checkbox.addEventListener('change', function() {
-                            const name = this.getAttribute('data-name');
-                            const isChecked = this.checked;
-                            
-                            // 更新狀態
-                            updateDeputyStatus(name, isChecked);
-                            
-                            // 更新標籤樣式
-                            const label = this.nextElementSibling;
-                            if (isChecked) {
-                                label.classList.add('checked');
-                                label.innerHTML = `${name} <span class="deputy-badge">代領班</span>`;
-                            } else {
-                                label.classList.remove('checked');
-                                label.textContent = name;
-                            }
-                        });
-                    });
-                }, 100);
-            } else if (deputyListSection) {
-                deputyListSection.style.display = 'none';
-            }
-        }
-
-        // 將代領班狀態應用到卡片
-        function applyDeputyStatusToCards() {
-            // 找到所有人員卡片
-            const personCards = document.querySelectorAll('.person-card');
-            
-            personCards.forEach(card => {
-                const nameElement = card.querySelector('.person-name');
-                if (nameElement) {
-                    const name = nameElement.textContent.replace(/點擊複製姓名/, '').trim();
-                    
-                    if (deputyStatus[name]) {
-                        card.classList.add('deputy-card');
-                        
-                        // 添加代領班標記
-                        const deputyBadge = card.querySelector('.deputy-badge');
-                        if (!deputyBadge) {
-                            const badgeSpan = document.createElement('span');
-                            badgeSpan.className = 'deputy-badge';
-                            badgeSpan.textContent = '代領班';
-                            nameElement.appendChild(badgeSpan);
-                        }
-                    } else {
-                        card.classList.remove('deputy-card');
-                        
-                        // 移除代領班標記
-                        const deputyBadge = card.querySelector('.deputy-badge');
-                        if (deputyBadge) {
-                            deputyBadge.remove();
-                        }
-                    }
-                }
-            });
-        }
-
-        // 顯示選擇的日期班表
-        function showSelectedDateSchedule() {
-            const dateSelect = document.getElementById('dateSelect');
-            if (!dateSelect) return;
-            
-            const selectedDate = parseInt(dateSelect.value);
-            if (!selectedDate) return;
-            
-            // 獲取選擇的日期資訊
-            const selectedOption = dateSelect.options[dateSelect.selectedIndex];
-            const selectedDateInfo = document.getElementById('selectedDateInfo');
-            if (selectedDateInfo) {
-                selectedDateInfo.innerHTML = `
-                    <h5 class="mb-0">
-                        <i class="bi bi-calendar-check"></i> 
-                        <strong>查詢日期：${selectedOption.textContent}</strong>
-                    </h5>
-                `;
-                selectedDateInfo.style.display = 'block';
-            }
-            
-            // 找出該日期所有班型的人員
-            const shiftGroups = {};
-            let totalPeople = 0;
-            
-            scheduleData.forEach(person => {
-                const shiftData = person.shifts[selectedDate];
-                if (shiftData) {
-                    const shift = shiftData.shift;
-                    if (!shiftGroups[shift]) {
-                        shiftGroups[shift] = [];
-                    }
-                    shiftGroups[shift].push({
-                        name: person.name,
-                        shift: shift,
-                        originalShift: shiftData.originalShift,
-                        isEnglishThreeCharSlash: shiftData.isEnglishThreeCharSlash,
-                        isOtherSlash: shiftData.isOtherSlash,
-                        isHoliday: shiftData.isHoliday,
-                        category: person.category
-                    });
-                    totalPeople++;
-                }
-            });
-            
-            const scheduleResults = document.getElementById('scheduleResults');
-            if (!scheduleResults) return;
-            
-            scheduleResults.innerHTML = '';
-            
-            if (Object.keys(shiftGroups).length === 0) {
-                scheduleResults.innerHTML = `
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle"></i> 
-                        這一天沒有人上班，可能是假日或全員休假
-                    </div>
-                `;
-                const resultCount = document.getElementById('resultCount');
-                if (resultCount) {
-                    resultCount.textContent = '0人';
-                }
-                return;
-            }
-            
-            const resultCount = document.getElementById('resultCount');
-            if (resultCount) {
-                resultCount.textContent = `${totalPeople}人`;
-            }
-            
-            // 分類人員
-            const warehousePeople = []; // 庫房人員（非休假）
-            const administrativePeople = []; // 行政人員（非休假）
-            const regularGroups = {};   // 正規班型
-            const holidayPeople = [];   // 休假人員（包含所有人員休假）
-            const specialPeople = [];   // 特殊班型（非三個英文字母的斜線班型）
-            const randomPeople = [];    // 隨機班型（三個英文字母的斜線班型和其他非正規、非休假班型）
-            
-            Object.keys(shiftGroups).forEach(shift => {
-                const persons = shiftGroups[shift];
-                
-                persons.forEach(person => {
-                    // 檢查是否為休假班型（包含所有人員休假）
-                    if (person.isHoliday || holidayShifts.includes(person.shift)) {
-                        // 所有人員休假都放到休假人員
-                        holidayPeople.push(person);
-                        return;
-                    }
-                    
-                    // 檢查是否為庫房人員
-                    if (person.category === 'warehouse-person') {
-                        warehousePeople.push(person);
-                        return;
-                    }
-                    
-                    // 檢查是否為行政人員
-                    if (person.category === 'administrative-person') {
-                        administrativePeople.push(person);
-                        return;
-                    }
-                    
-                    // QC人員現在會按照班型分類，不單獨顯示
-                    
-                    // 檢查是否為三個英文字母的斜線班型 -> 隨機班型
-                    if (person.isEnglishThreeCharSlash) {
-                        randomPeople.push(person);
-                        return;
-                    }
-                    
-                    // 檢查是否為其他斜線班型 -> 特殊班型
-                    if (person.isOtherSlash) {
-                        specialPeople.push(person);
-                        return;
-                    }
-                    
-                    const category = getShiftCategory(person.shift);
-                    
-                    if (category === 'regular') {
-                        if (!regularGroups[person.shift]) {
-                            regularGroups[person.shift] = [];
-                        }
-                        regularGroups[person.shift].push(person);
-                    } else {
-                        randomPeople.push(person);
-                    }
-                });
-            });
-            
-            // 1. 顯示特殊班型（最上面）
-            if (specialPeople.length > 0) {
-                const specialSection = document.createElement('div');
-                specialSection.className = 'shift-section special-section';
-                specialSection.innerHTML = `
-                    <div class="shift-title special-title">
-                        <i class="bi bi-slash-circle"></i> 特殊班型
-                        <span class="float-end">${specialPeople.length} 人</span>
-                    </div>
-                    <div class="row" id="special-persons"></div>
-                `;
-                
-                scheduleResults.appendChild(specialSection);
-                
-                const specialContainer = document.getElementById('special-persons');
-                
-                // 按照層級排序人員
-                const sortedSpecialPeople = sortByRank(specialPeople);
-                
-                // 按層級分組
-                const groupedSpecialByRank = {};
-                sortedSpecialPeople.forEach(person => {
-                    const rank = person.category || 'random';
-                    if (!groupedSpecialByRank[rank]) {
-                        groupedSpecialByRank[rank] = [];
-                    }
-                    groupedSpecialByRank[rank].push(person);
-                });
-                
-                // 按照層級順序顯示
-                let isFirstSpecialRank = true;
-                holidayDisplayOrder.forEach(rank => {
-                    if (groupedSpecialByRank[rank] && groupedSpecialByRank[rank].length > 0) {
-                        const personsInRank = groupedSpecialByRank[rank];
-                        const rankTitle = personnelCategories[rank] ? personnelCategories[rank].title : '其他';
-                        
-                        // 如果不是第一個層級，添加紅色分隔線
-                        if (!isFirstSpecialRank) {
-                            const divider = document.createElement('div');
-                            divider.className = 'rank-divider';
-                            specialContainer.appendChild(divider);
-                        }
-                        
-                        // 添加層級標題
-                        const rankTitleEl = document.createElement('div');
-                        rankTitleEl.className = 'rank-title';
-                        rankTitleEl.textContent = `${rankTitle} (${personsInRank.length}人)`;
-                        specialContainer.appendChild(rankTitleEl);
-                        
-                        // 添加層級區塊
-                        const rankGroup = document.createElement('div');
-                        rankGroup.className = 'shift-rank-group row';
-                        
-                        personsInRank.forEach(person => {
-                            const personCol = document.createElement('div');
-                            personCol.className = 'col-md-3 col-sm-4 col-6 mb-3';
-                            
-                            // 檢查是否為代領班人員
-                            const isDeputy = deputyPersonnel.includes(person.name);
-                            const isDeputyChecked = deputyStatus[person.name] || false;
-                            
-                            personCol.innerHTML = `
-                                <div class="person-card special-person-card ${isDeputyChecked ? 'deputy-card' : ''}">
-                                    <div class="person-name" title="點擊複製姓名">
-                                        ${person.name}
-                                        ${isDeputyChecked ? '<span class="deputy-badge">代領班</span>' : ''}
-                                        <span class="copy-tooltip">點擊複製姓名</span>
-                                    </div>
-                                    ${isDeputy ? `
-                                        <div class="deputy-checkbox-container">
-                                            <input type="checkbox" class="deputy-checkbox" id="deputy-${person.name}-special" 
-                                                   ${isDeputyChecked ? 'checked' : ''} data-name="${person.name}">
-                                            <label class="deputy-label ${isDeputyChecked ? 'checked' : ''}" for="deputy-${person.name}-special">標記為代領班</label>
-                                        </div>
-                                    ` : ''}
-                                    <div class="shift-description">${person.originalShift}</div>
-                                </div>
-                            `;
-                            rankGroup.appendChild(personCol);
-                        });
-                        
-                        specialContainer.appendChild(rankGroup);
-                        isFirstSpecialRank = false;
-                    }
-                });
-            }
-            
-            // 2. 顯示隨機班型（第二）
-            if (randomPeople.length > 0) {
-                const randomSection = document.createElement('div');
-                randomSection.className = 'shift-section random-section';
-                randomSection.innerHTML = `
-                    <div class="shift-title random-title">
-                        <i class="bi bi-shuffle"></i> 隨機班型
-                        <span class="float-end">${randomPeople.length} 人</span>
-                    </div>
-                    <div class="row" id="random-persons"></div>
-                `;
-                
-                scheduleResults.appendChild(randomSection);
-                
-                const randomContainer = document.getElementById('random-persons');
-                
-                // 按照層級排序人員
-                const sortedRandomPeople = sortByRank(randomPeople);
-                
-                // 按層級分組
-                const groupedRandomByRank = {};
-                sortedRandomPeople.forEach(person => {
-                    const rank = person.category || 'random';
-                    if (!groupedRandomByRank[rank]) {
-                        groupedRandomByRank[rank] = [];
-                    }
-                    groupedRandomByRank[rank].push(person);
-                });
-                
-                // 按照層級順序顯示
-                let isFirstRandomRank = true;
-                holidayDisplayOrder.forEach(rank => {
-                    if (groupedRandomByRank[rank] && groupedRandomByRank[rank].length > 0) {
-                        const personsInRank = groupedRandomByRank[rank];
-                        const rankTitle = personnelCategories[rank] ? personnelCategories[rank].title : '其他';
-                        
-                        // 如果不是第一個層級，添加紅色分隔線
-                        if (!isFirstRandomRank) {
-                            const divider = document.createElement('div');
-                            divider.className = 'rank-divider';
-                            randomContainer.appendChild(divider);
-                        }
-                        
-                        // 添加層級標題
-                        const rankTitleEl = document.createElement('div');
-                        rankTitleEl.className = 'rank-title';
-                        rankTitleEl.textContent = `${rankTitle} (${personsInRank.length}人)`;
-                        randomContainer.appendChild(rankTitleEl);
-                        
-                        // 添加層級區塊
-                        const rankGroup = document.createElement('div');
-                        rankGroup.className = 'shift-rank-group row';
-                        
-                        personsInRank.forEach(person => {
-                            const personCol = document.createElement('div');
-                            personCol.className = 'col-md-3 col-sm-4 col-6 mb-3';
-                            
-                            // 檢查是否為斜線班型
-                            const isSlashShift = person.isEnglishThreeCharSlash;
-                            
-                            // 檢查是否為代領班人員
-                            const isDeputy = deputyPersonnel.includes(person.name);
-                            const isDeputyChecked = deputyStatus[person.name] || false;
-                            
-                            // 使用原本設定的隨機人員顏色
-                            const cardClass = person.category === 'random' ? 'random-person' : (person.category || 'random-person');
-                            
-                            personCol.innerHTML = `
-                                <div class="person-card ${cardClass} ${isDeputyChecked ? 'deputy-card' : ''}">
-                                    <div class="person-name" title="點擊複製姓名">
-                                        ${person.name}
-                                        ${isDeputyChecked ? '<span class="deputy-badge">代領班</span>' : ''}
-                                        <span class="copy-tooltip">點擊複製姓名</span>
-                                        ${isSlashShift ? '' : `<span class="english-shift">(${person.shift})</span>`}
-                                    </div>
-                                    ${isDeputy ? `
-                                        <div class="deputy-checkbox-container">
-                                            <input type="checkbox" class="deputy-checkbox" id="deputy-${person.name}-random" 
-                                                   ${isDeputyChecked ? 'checked' : ''} data-name="${person.name}">
-                                            <label class="deputy-label ${isDeputyChecked ? 'checked' : ''}" for="deputy-${person.name}-random">標記為代領班</label>
-                                        </div>
-                                    ` : ''}
-                                    ${isSlashShift ? `<div class="shift-description">${person.originalShift}</div>` : ''}
-                                </div>
-                            `;
-                            rankGroup.appendChild(personCol);
-                        });
-                        
-                        randomContainer.appendChild(rankGroup);
-                        isFirstRandomRank = false;
-                    }
-                });
-            }
-            
-            // 3. 顯示正規班型（第三）- 班表區塊使用M1顏色背景，人員卡片使用原本設定的顏色
-            if (Object.keys(regularGroups).length > 0) {
-                const workShiftOrder = ['K0', 'M', 'M1', 'M2', 'M3', 'D', 'D2', 'D4', 'D5', 'D6', 'K2', 'N', 'K5', 'K6'];
-                
-                const sortedWorkShifts = Object.keys(regularGroups).sort((a, b) => {
-                    const indexA = workShiftOrder.indexOf(a);
-                    const indexB = workShiftOrder.indexOf(b);
-                    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-                    if (indexA !== -1) return -1;
-                    if (indexB !== -1) return 1;
-                    return a.localeCompare(b);
-                });
-                
-                sortedWorkShifts.forEach(shift => {
-                    const persons = regularGroups[shift];
-                    const color = '#06d6a0'; // 班表區塊使用M1顏色
-                    const description = shiftDescriptions[shift] || '';
-                    
-                    const shiftSection = document.createElement('div');
-                    shiftSection.className = 'shift-section regular-shift-section';
-                    shiftSection.innerHTML = `
-                        <div class="shift-title work-shift-title">
-                            <span class="badge" style="background-color: ${color}; font-size: 1.1rem; padding: 8px 15px;">
-                                ${shift}
-                            </span>
-                            ${description ? `<small class="ms-2 text-muted">${description}</small>` : ''}
-                            <span class="float-end">${persons.length} 人</span>
-                        </div>
-                        <div class="row" id="persons-${shift}"></div>
-                    `;
-                    
-                    scheduleResults.appendChild(shiftSection);
-                    
-                    const personsContainer = document.getElementById(`persons-${shift}`);
-                    
-                    // 按照層級排序人員
-                    const sortedPersons = sortByRank(persons);
-                    
-                    // 按層級分組
-                    const groupedByRank = {};
-                    sortedPersons.forEach(person => {
-                        const rank = person.category || 'random';
-                        if (!groupedByRank[rank]) {
-                            groupedByRank[rank] = [];
-                        }
-                        groupedByRank[rank].push(person);
-                    });
-                    
-                    // 按照層級順序顯示
-                    let isFirstRank = true;
-                    holidayDisplayOrder.forEach(rank => {
-                        if (groupedByRank[rank] && groupedByRank[rank].length > 0) {
-                            const personsInRank = groupedByRank[rank];
-                            const rankTitle = personnelCategories[rank] ? personnelCategories[rank].title : '其他';
-                            
-                            // 如果不是第一個層級，添加紅色分隔線
-                            if (!isFirstRank) {
-                                const divider = document.createElement('div');
-                                divider.className = 'rank-divider';
-                                personsContainer.appendChild(divider);
-                            }
-                            
-                            // 添加層級標題
-                            const rankTitleEl = document.createElement('div');
-                            rankTitleEl.className = 'rank-title';
-                            rankTitleEl.textContent = `${rankTitle} (${personsInRank.length}人)`;
-                            personsContainer.appendChild(rankTitleEl);
-                            
-                            // 添加層級區塊
-                            const rankGroup = document.createElement('div');
-                            rankGroup.className = 'shift-rank-group row';
-                            
-                            personsInRank.forEach(person => {
-                                const personCol = document.createElement('div');
-                                personCol.className = 'col-md-3 col-sm-4 col-6 mb-3';
-                                
-                                // 檢查是否為代領班人員
-                                const isDeputy = deputyPersonnel.includes(person.name);
-                                const isDeputyChecked = deputyStatus[person.name] || false;
-                                
-                                // 組合人員類別的CSS類 - 使用原本設定的顏色
-                                let cssClasses = 'person-card regular-shift-card';
-                                if (person.category) {
-                                    cssClasses += ` ${person.category}`;
-                                }
-                                if (isDeputyChecked) {
-                                    cssClasses += ' deputy-card';
-                                }
-                                
-                                personCol.innerHTML = `
-                                    <div class="${cssClasses}">
-                                        <div class="person-name" title="點擊複製姓名">
-                                            ${person.name}
-                                            ${isDeputyChecked ? '<span class="deputy-badge">代領班</span>' : ''}
-                                            <span class="copy-tooltip">點擊複製姓名</span>
-                                        </div>
-                                        ${isDeputy ? `
-                                            <div class="deputy-checkbox-container">
-                                                <input type="checkbox" class="deputy-checkbox" id="deputy-${person.name}-regular" 
-                                                       ${isDeputyChecked ? 'checked' : ''} data-name="${person.name}">
-                                                <label class="deputy-label ${isDeputyChecked ? 'checked' : ''}" for="deputy-${person.name}-regular">標記為代領班</label>
-                                            </div>
-                                        ` : ''}
-                                        <!-- 正規班型不顯示時間描述 -->
-                                    </div>
-                                `;
-                                rankGroup.appendChild(personCol);
-                            });
-                            
-                            personsContainer.appendChild(rankGroup);
-                            isFirstRank = false;
-                        }
-                    });
-                });
-            }
-            
-            // 4. 顯示庫房人員（第四，在K6下面）- 班表區塊使用庫房顏色，人員卡片使用原本設定的庫房顏色
-            if (warehousePeople.length > 0) {
-                const warehouseSection = document.createElement('div');
-                warehouseSection.className = 'shift-section warehouse-section';
-                warehouseSection.innerHTML = `
-                    <div class="shift-title warehouse-title">
-                        <i class="bi bi-box-seam"></i> 庫房人員 (上班人員)
-                        <span class="float-end">${warehousePeople.length} 人</span>
-                    </div>
-                    <div id="warehouse-persons"></div>
-                `;
-                
-                scheduleResults.appendChild(warehouseSection);
-                
-                const warehouseContainer = document.getElementById('warehouse-persons');
-                
-                // 庫房人員按照班型時間順序排序
-                const warehouseShiftOrder = ['K0', 'M', 'M1', 'M2', 'M3', 'D', 'D2', 'D4', 'D5', 'D6', 'K2', 'N', 'K5', 'K6'];
-                
-                // 按班型分組
-                const warehouseByShift = {};
-                warehousePeople.forEach(person => {
-                    if (!warehouseByShift[person.shift]) {
-                        warehouseByShift[person.shift] = [];
-                    }
-                    warehouseByShift[person.shift].push(person);
-                });
-                
-                // 按班型時間順序顯示
-                warehouseShiftOrder.forEach(shift => {
-                    if (warehouseByShift[shift]) {
-                        const persons = warehouseByShift[shift];
-                        const description = shiftDescriptions[shift] || '';
-                        
-                        // 添加班型時間標題
-                        const shiftTitleDiv = document.createElement('div');
-                        shiftTitleDiv.className = 'warehouse-shift-title';
-                        shiftTitleDiv.innerHTML = `
-                            <span class="badge" style="background-color: #bae18f;">
-                                ${shift}
-                            </span>
-                            ${description ? `<span class="ms-2">${description}</span>` : ''}
-                            <span class="float-end">${persons.length} 人</span>
-                        `;
-                        warehouseContainer.appendChild(shiftTitleDiv);
-                        
-                        // 按照層級排序人員
-                        const sortedPersons = sortByRank(persons);
-                        
-                        const personsRow = document.createElement('div');
-                        personsRow.className = 'row mb-3';
-                        
-                        sortedPersons.forEach(person => {
-                            const personCol = document.createElement('div');
-                            personCol.className = 'col-md-3 col-sm-4 col-6 mb-2';
-                            
-                            // 檢查是否為代領班人員
-                            const isDeputy = deputyPersonnel.includes(person.name);
-                            const isDeputyChecked = deputyStatus[person.name] || false;
-                            
-                            personCol.innerHTML = `
-                                <div class="person-card warehouse-person-card ${isDeputyChecked ? 'deputy-card' : ''}">
-                                    <div class="person-name" title="點擊複製姓名">
-                                        ${person.name}
-                                        ${isDeputyChecked ? '<span class="deputy-badge">代領班</span>' : ''}
-                                        <span class="copy-tooltip">點擊複製姓名</span>
-                                    </div>
-                                    ${isDeputy ? `
-                                        <div class="deputy-checkbox-container">
-                                            <input type="checkbox" class="deputy-checkbox" id="deputy-${person.name}-warehouse" 
-                                                   ${isDeputyChecked ? 'checked' : ''} data-name="${person.name}">
-                                            <label class="deputy-label ${isDeputyChecked ? 'checked' : ''}" for="deputy-${person.name}-warehouse">標記為代領班</label>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            `;
-                            personsRow.appendChild(personCol);
-                        });
-                        
-                        warehouseContainer.appendChild(personsRow);
-                        
-                        // 添加分隔線（除非是最後一個班型）
-                        if (shift !== warehouseShiftOrder[warehouseShiftOrder.length - 1]) {
-                            const separator = document.createElement('hr');
-                            separator.style.margin = '15px 0';
-                            separator.style.opacity = '0.3';
-                            warehouseContainer.appendChild(separator);
-                        }
-                    }
-                });
-                
-                // 顯示其他不在標準順序中的庫房人員班型（放在最後）
-                Object.keys(warehouseByShift).forEach(shift => {
-                    if (!warehouseShiftOrder.includes(shift)) {
-                        const persons = warehouseByShift[shift];
-                        
-                        // 添加班型時間標題
-                        const shiftTitleDiv = document.createElement('div');
-                        shiftTitleDiv.className = 'warehouse-shift-title';
-                        shiftTitleDiv.innerHTML = `
-                            <span class="badge" style="background-color: #bae18f;">
-                                ${shift}
-                            </span>
-                            <span class="float-end">${persons.length} 人</span>
-                        `;
-                        warehouseContainer.appendChild(shiftTitleDiv);
-                        
-                        // 按照層級排序人員
-                        const sortedPersons = sortByRank(persons);
-                        
-                        const personsRow = document.createElement('div');
-                        personsRow.className = 'row mb-3';
-                        
-                        sortedPersons.forEach(person => {
-                            const personCol = document.createElement('div');
-                            personCol.className = 'col-md-3 col-sm-4 col-6 mb-2';
-                            
-                            // 檢查是否為代領班人員
-                            const isDeputy = deputyPersonnel.includes(person.name);
-                            const isDeputyChecked = deputyStatus[person.name] || false;
-                            
-                            personCol.innerHTML = `
-                                <div class="person-card warehouse-person-card ${isDeputyChecked ? 'deputy-card' : ''}">
-                                    <div class="person-name" title="點擊複製姓名">
-                                        ${person.name}
-                                        ${isDeputyChecked ? '<span class="deputy-badge">代領班</span>' : ''}
-                                        <span class="copy-tooltip">點擊複製姓名</span>
-                                    </div>
-                                    ${isDeputy ? `
-                                        <div class="deputy-checkbox-container">
-                                            <input type="checkbox" class="deputy-checkbox" id="deputy-${person.name}-warehouse-other" 
-                                                   ${isDeputyChecked ? 'checked' : ''} data-name="${person.name}">
-                                            <label class="deputy-label ${isDeputyChecked ? 'checked' : ''}" for="deputy-${person.name}-warehouse-other">標記為代領班</label>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            `;
-                            personsRow.appendChild(personCol);
-                        });
-                        
-                        warehouseContainer.appendChild(personsRow);
-                    }
-                });
-            }
-            
-            // 5. 顯示行政人員（第五）- 班表區塊使用行政顏色，人員卡片使用原本設定的行政顏色
-            if (administrativePeople.length > 0) {
-                const administrativeSection = document.createElement('div');
-                administrativeSection.className = 'shift-section administrative-section';
-                administrativeSection.innerHTML = `
-                    <div class="shift-title administrative-title">
-                        <i class="bi bi-person-badge"></i> 行政人員
-                        <span class="float-end">${administrativePeople.length} 人</span>
-                    </div>
-                    <div class="row" id="administrative-persons"></div>
-                `;
-                
-                scheduleResults.appendChild(administrativeSection);
-                
-                const administrativeContainer = document.getElementById('administrative-persons');
-                
-                // 行政人員按照班型順序排序
-                const administrativeShiftOrder = ['K0', 'M', 'M1', 'M2', 'M3', 'D', 'D2', 'D4', 'D5', 'D6', 'K2', 'N', 'K5', 'K6'];
-                
-                // 按班型分組
-                const administrativeByShift = {};
-                administrativePeople.forEach(person => {
-                    if (!administrativeByShift[person.shift]) {
-                        administrativeByShift[person.shift] = [];
-                    }
-                    administrativeByShift[person.shift].push(person);
-                });
-                
-                // 按班型順序顯示
-                administrativeShiftOrder.forEach(shift => {
-                    if (administrativeByShift[shift]) {
-                        const persons = administrativeByShift[shift];
-                        persons.sort((a, b) => a.name.localeCompare(b.name));
-                        
-                        persons.forEach(person => {
-                            const personCol = document.createElement('div');
-                            personCol.className = 'col-md-3 col-sm-4 col-6 mb-3';
-                            
-                            // 檢查是否為代領班人員
-                            const isDeputy = deputyPersonnel.includes(person.name);
-                            const isDeputyChecked = deputyStatus[person.name] || false;
-                            
-                            const description = shiftDescriptions[person.shift] || person.originalShift || '';
-                            
-                            personCol.innerHTML = `
-                                <div class="person-card administrative-person-card ${isDeputyChecked ? 'deputy-card' : ''}">
-                                    <div class="person-name" title="點擊複製姓名">
-                                        ${person.name}
-                                        ${isDeputyChecked ? '<span class="deputy-badge">代領班</span>' : ''}
-                                        <span class="copy-tooltip">點擊複製姓名</span>
-                                    </div>
-                                    ${isDeputy ? `
-                                        <div class="deputy-checkbox-container">
-                                            <input type="checkbox" class="deputy-checkbox" id="deputy-${person.name}-administrative" 
-                                                   ${isDeputyChecked ? 'checked' : ''} data-name="${person.name}">
-                                            <label class="deputy-label ${isDeputyChecked ? 'checked' : ''}" for="deputy-${person.name}-administrative">標記為代領班</label>
-                                        </div>
-                                    ` : ''}
-                                    <div class="shift-description">${description}</div>
-                                </div>
-                            `;
-                            administrativeContainer.appendChild(personCol);
-                        });
-                    }
-                });
-                
-                // 顯示其他不在標準順序中的行政人員班型
-                Object.keys(administrativeByShift).forEach(shift => {
-                    if (!administrativeShiftOrder.includes(shift)) {
-                        const persons = administrativeByShift[shift];
-                        persons.sort((a, b) => a.name.localeCompare(b.name));
-                        
-                        persons.forEach(person => {
-                            const personCol = document.createElement('div');
-                            personCol.className = 'col-md-3 col-sm-4 col-6 mb-3';
-                            
-                            // 檢查是否為代領班人員
-                            const isDeputy = deputyPersonnel.includes(person.name);
-                            const isDeputyChecked = deputyStatus[person.name] || false;
-                            
-                            const description = shiftDescriptions[person.shift] || person.originalShift || '';
-                            
-                            personCol.innerHTML = `
-                                <div class="person-card administrative-person-card ${isDeputyChecked ? 'deputy-card' : ''}">
-                                    <div class="person-name" title="點擊複製姓名">
-                                        ${person.name}
-                                        ${isDeputyChecked ? '<span class="deputy-badge">代領班</span>' : ''}
-                                        <span class="copy-tooltip">點擊複製姓名</span>
-                                    </div>
-                                    ${isDeputy ? `
-                                        <div class="deputy-checkbox-container">
-                                            <input type="checkbox" class="deputy-checkbox" id="deputy-${person.name}-administrative-other" 
-                                                   ${isDeputyChecked ? 'checked' : ''} data-name="${person.name}">
-                                            <label class="deputy-label ${isDeputyChecked ? 'checked' : ''}" for="deputy-${person.name}-administrative-other">標記為代領班</label>
-                                        </div>
-                                    ` : ''}
-                                    <div class="shift-description">${description}</div>
-                                </div>
-                            `;
-                            administrativeContainer.appendChild(personCol);
-                        });
-                    }
-                });
-            }
-            
-            // 6. 顯示休假人員（最後）- 按照指定類別順序集中顯示
-            if (holidayPeople.length > 0) {
-                const holidaySection = document.createElement('div');
-                holidaySection.className = 'shift-section holiday-section';
-                
-                // 按照指定順序重新分類休假人員
-                const holidayByCategory = {};
-                holidayDisplayOrder.forEach(category => {
-                    holidayByCategory[category] = [];
-                });
-                
-                holidayPeople.forEach(person => {
-                    const category = person.category || 'random';
-                    if (holidayByCategory[category]) {
-                        holidayByCategory[category].push(person);
-                    } else {
-                        // 如果是不在指定順序中的類別，放到最後
-                        if (!holidayByCategory['other']) {
-                            holidayByCategory['other'] = [];
-                        }
-                        holidayByCategory['other'].push(person);
-                    }
-                });
-                
-                // 計算總人數
-                let totalHolidayPeople = 0;
-                Object.values(holidayByCategory).forEach(persons => {
-                    totalHolidayPeople += persons.length;
-                });
-                
-                const collapseId = 'holiday-collapse-' + Date.now();
-                
-                holidaySection.innerHTML = `
-                    <div class="shift-title holiday-title">
-                        <i class="bi bi-umbrella"></i> 休假人員
-                        <span class="float-end">${totalHolidayPeople} 人</span>
-                    </div>
-                    
-                    <div class="holiday-collapse">
-                        <button class="btn btn-light holiday-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}" aria-expanded="false" aria-controls="${collapseId}">
-                            <i class="bi bi-chevron-down"></i> 查看休假人員 (${totalHolidayPeople}人)
-                        </button>
-                        <div class="collapse" id="${collapseId}">
-                            <div class="collapse-content">
-                                <div id="holiday-persons"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                scheduleResults.appendChild(holidaySection);
-                
-                const holidayContainer = document.getElementById('holiday-persons');
-                
-                // 按指定順序顯示各個類別
-                let isFirstCategory = true;
-                
-                // 先顯示指定順序的類別
-                holidayDisplayOrder.forEach(category => {
-                    const persons = holidayByCategory[category];
-                    if (persons && persons.length > 0) {
-                        const categoryInfo = personnelCategories[category];
-                        const categoryTitle = categoryInfo ? categoryInfo.title : category;
-                        
-                        // 如果不是第一個類別，添加分隔線
-                        if (!isFirstCategory) {
-                            const divider = document.createElement('div');
-                            divider.className = 'rank-divider';
-                            holidayContainer.appendChild(divider);
-                        }
-                        
-                        // 添加類別標題
-                        const categoryTitleEl = document.createElement('div');
-                        categoryTitleEl.className = `holiday-category-title ${category}-title`;
-                        categoryTitleEl.textContent = `${categoryTitle} (${persons.length}人)`;
-                        holidayContainer.appendChild(categoryTitleEl);
-                        
-                        // 按班型分組
-                        const personsByShift = {};
-                        persons.forEach(person => {
-                            if (!personsByShift[person.shift]) {
-                                personsByShift[person.shift] = [];
-                            }
-                            personsByShift[person.shift].push(person);
-                        });
-                        
-                        // 按班型順序顯示
-                        const shiftOrder = ['公', 'R', 'GBL', 'L', 'A', '福', 'Z'];
-                        
-                        shiftOrder.forEach(shift => {
-                            if (personsByShift[shift]) {
-                                const shiftPersons = personsByShift[shift];
-                                const color = shiftColors[shift] || '#ff9e00';
-                                
-                                // 按姓名排序
-                                shiftPersons.sort((a, b) => a.name.localeCompare(b.name));
-                                
-                                const shiftTitle = document.createElement('div');
-                                shiftTitle.className = 'mb-2';
-                                shiftTitle.innerHTML = `
-                                    <div style="margin-bottom: 8px;">
-                                        <span class="badge" style="background-color: ${color}; font-size: 0.9rem; padding: 4px 10px;">
-                                            ${shift}
-                                        </span>
-                                        <span class="float-end">${shiftPersons.length} 人</span>
-                                    </div>
-                                `;
-                                
-                                holidayContainer.appendChild(shiftTitle);
-                                
-                                const personsRow = document.createElement('div');
-                                personsRow.className = 'row mb-2';
-                                
-                                shiftPersons.forEach(person => {
-                                    const personCol = document.createElement('div');
-                                    personCol.className = 'col-md-3 col-sm-4 col-6 mb-2';
-                                    
-                                    // 檢查是否為代領班人員
-                                    const isDeputy = deputyPersonnel.includes(person.name);
-                                    const isDeputyChecked = deputyStatus[person.name] || false;
-                                    
-                                    // 使用對應的人員類別CSS類
-                                    let cssClasses = 'person-card';
-                                    if (person.category === 'warehouse-person') {
-                                        cssClasses = 'person-card warehouse-person';
-                                    } else if (person.category === 'administrative-person') {
-                                        cssClasses = 'person-card administrative-person';
-                                    } else if (person.category === 'qc-person') {
-                                        cssClasses = 'person-card qc-person';
-                                    } else if (person.category) {
-                                        cssClasses += ` ${person.category}`;
-                                    }
-                                    if (isDeputyChecked) {
-                                        cssClasses += ' deputy-card';
-                                    }
-                                    
-                                    personCol.innerHTML = `
-                                        <div class="${cssClasses}">
-                                            <div class="person-name" title="點擊複製姓名">
-                                                ${person.name}
-                                                ${isDeputyChecked ? '<span class="deputy-badge">代領班</span>' : ''}
-                                                <span class="copy-tooltip">點擊複製姓名</span>
-                                            </div>
-                                            ${isDeputy ? `
-                                                <div class="deputy-checkbox-container">
-                                                    <input type="checkbox" class="deputy-checkbox" id="deputy-${person.name}-holiday" 
-                                                           ${isDeputyChecked ? 'checked' : ''} data-name="${person.name}">
-                                                    <label class="deputy-label ${isDeputyChecked ? 'checked' : ''}" for="deputy-${person.name}-holiday">標記為代領班</label>
-                                                </div>
-                                            ` : ''}
-                                        </div>
-                                    `;
-                                    personsRow.appendChild(personCol);
-                                });
-                                
-                                holidayContainer.appendChild(personsRow);
-                            }
-                        });
-                        
-                        // 顯示其他不在標準順序中的班型
-                        Object.keys(personsByShift).forEach(shift => {
-                            if (!shiftOrder.includes(shift)) {
-                                const shiftPersons = personsByShift[shift];
-                                const color = shiftColors[shift] || '#ff9e00';
-                                
-                                // 按姓名排序
-                                shiftPersons.sort((a, b) => a.name.localeCompare(b.name));
-                                
-                                const shiftTitle = document.createElement('div');
-                                shiftTitle.className = 'mb-2';
-                                shiftTitle.innerHTML = `
-                                    <div style="margin-bottom: 8px;">
-                                        <span class="badge" style="background-color: ${color}; font-size: 0.9rem; padding: 4px 10px;">
-                                            ${shift}
-                                        </span>
-                                        <span class="float-end">${shiftPersons.length} 人</span>
-                                    </div>
-                                `;
-                                
-                                holidayContainer.appendChild(shiftTitle);
-                                
-                                const personsRow = document.createElement('div');
-                                personsRow.className = 'row mb-2';
-                                
-                                shiftPersons.forEach(person => {
-                                    const personCol = document.createElement('div');
-                                    personCol.className = 'col-md-3 col-sm-4 col-6 mb-2';
-                                    
-                                    // 檢查是否為代領班人員
-                                    const isDeputy = deputyPersonnel.includes(person.name);
-                                    const isDeputyChecked = deputyStatus[person.name] || false;
-                                    
-                                    // 使用對應的人員類別CSS類
-                                    let cssClasses = 'person-card';
-                                    if (person.category === 'warehouse-person') {
-                                        cssClasses = 'person-card warehouse-person';
-                                    } else if (person.category === 'administrative-person') {
-                                        cssClasses = 'person-card administrative-person';
-                                    } else if (person.category === 'qc-person') {
-                                        cssClasses = 'person-card qc-person';
-                                    } else if (person.category) {
-                                        cssClasses += ` ${person.category}`;
-                                    }
-                                    if (isDeputyChecked) {
-                                        cssClasses += ' deputy-card';
-                                    }
-                                    
-                                    personCol.innerHTML = `
-                                        <div class="${cssClasses}">
-                                            <div class="person-name" title="點擊複製姓名">
-                                                ${person.name}
-                                                ${isDeputyChecked ? '<span class="deputy-badge">代領班</span>' : ''}
-                                                <span class="copy-tooltip">點擊複製姓名</span>
-                                            </div>
-                                            ${isDeputy ? `
-                                                <div class="deputy-checkbox-container">
-                                                    <input type="checkbox" class="deputy-checkbox" id="deputy-${person.name}-holiday-other" 
-                                                           ${isDeputyChecked ? 'checked' : ''} data-name="${person.name}">
-                                                    <label class="deputy-label ${isDeputyChecked ? 'checked' : ''}" for="deputy-${person.name}-holiday-other">標記為代領班</label>
-                                                </div>
-                                            ` : ''}
-                                        </div>
-                                    `;
-                                    personsRow.appendChild(personCol);
-                                });
-                                
-                                holidayContainer.appendChild(personsRow);
-                            }
-                        });
-                        
-                        isFirstCategory = false;
-                    }
-                });
-                
-                // 顯示其他類別（不在指定順序中的）
-                if (holidayByCategory['other'] && holidayByCategory['other'].length > 0) {
-                    const persons = holidayByCategory['other'];
-                    
-                    // 如果不是第一個類別，添加分隔線
-                    if (!isFirstCategory) {
-                        const divider = document.createElement('div');
-                        divider.className = 'rank-divider';
-                        holidayContainer.appendChild(divider);
-                    }
-                    
-                    // 添加類別標題
-                    const categoryTitleEl = document.createElement('div');
-                    categoryTitleEl.className = 'holiday-category-title';
-                    categoryTitleEl.textContent = `其他人員 (${persons.length}人)`;
-                    holidayContainer.appendChild(categoryTitleEl);
-                    
-                    // 按班型分組
-                    const personsByShift = {};
-                    persons.forEach(person => {
-                        if (!personsByShift[person.shift]) {
-                            personsByShift[person.shift] = [];
-                        }
-                        personsByShift[person.shift].push(person);
-                    });
-                    
-                    // 顯示所有班型
-                    Object.keys(personsByShift).forEach(shift => {
-                        const shiftPersons = personsByShift[shift];
-                        const color = shiftColors[shift] || '#ff9e00';
-                        
-                        // 按姓名排序
-                        shiftPersons.sort((a, b) => a.name.localeCompare(b.name));
-                        
-                        const shiftTitle = document.createElement('div');
-                        shiftTitle.className = 'mb-2';
-                        shiftTitle.innerHTML = `
-                            <div style="margin-bottom: 8px;">
-                                <span class="badge" style="background-color: ${color}; font-size: 0.9rem; padding: 4px 10px;">
-                                    ${shift}
-                                </span>
-                                <span class="float-end">${shiftPersons.length} 人</span>
-                            </div>
-                        `;
-                        
-                        holidayContainer.appendChild(shiftTitle);
-                        
-                        const personsRow = document.createElement('div');
-                        personsRow.className = 'row mb-2';
-                        
-                        shiftPersons.forEach(person => {
-                            const personCol = document.createElement('div');
-                            personCol.className = 'col-md-3 col-sm-4 col-6 mb-2';
-                            
-                            // 檢查是否為代領班人員
-                            const isDeputy = deputyPersonnel.includes(person.name);
-                            const isDeputyChecked = deputyStatus[person.name] || false;
-                            
-                            personCol.innerHTML = `
-                                <div class="person-card">
-                                    <div class="person-name" title="點擊複製姓名">
-                                        ${person.name}
-                                        ${isDeputyChecked ? '<span class="deputy-badge">代領班</span>' : ''}
-                                        <span class="copy-tooltip">點擊複製姓名</span>
-                                    </div>
-                                    ${isDeputy ? `
-                                        <div class="deputy-checkbox-container">
-                                            <input type="checkbox" class="deputy-checkbox" id="deputy-${person.name}-holiday-other2" 
-                                                   ${isDeputyChecked ? 'checked' : ''} data-name="${person.name}">
-                                            <label class="deputy-label ${isDeputyChecked ? 'checked' : ''}" for="deputy-${person.name}-holiday-other2">標記為代領班</label>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            `;
-                            personsRow.appendChild(personCol);
-                        });
-                        
-                        holidayContainer.appendChild(personsRow);
-                    });
-                }
-            }
-            
-            // 綁定代領班勾選框事件
-            setTimeout(() => {
-                const checkboxes = document.querySelectorAll('.deputy-checkbox');
-                checkboxes.forEach(checkbox => {
-                    checkbox.addEventListener('change', function() {
-                        const name = this.getAttribute('data-name');
-                        const isChecked = this.checked;
-                        
-                        // 更新狀態
-                        updateDeputyStatus(name, isChecked);
-                        
-                        // 更新標籤樣式
-                        const label = this.nextElementSibling;
-                        if (label && label.classList.contains('deputy-label')) {
-                            if (isChecked) {
-                                label.classList.add('checked');
-                            } else {
-                                label.classList.remove('checked');
-                            }
-                        }
-                    });
-                });
-            }, 100);
-        }
-
-        // UI輔助函數
-        function showLoading() {
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            const resultSection = document.getElementById('resultSection');
-            
-            if (loadingSpinner) loadingSpinner.style.display = 'block';
-            if (resultSection) resultSection.style.display = 'none';
-        }
-
-        function hideLoading() {
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            const resultSection = document.getElementById('resultSection');
-            
-            if (loadingSpinner) loadingSpinner.style.display = 'none';
-            if (resultSection) resultSection.style.display = 'block';
-        }
-
-        function showError(message) {
-            const errorMessage = document.getElementById('errorMessage');
-            if (errorMessage) {
-                errorMessage.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>${message}`;
-                errorMessage.style.display = 'block';
-            }
-            hideLoading();
-        }
-
-        // 儲存資料到 LocalStorage
-        function saveToLocalStorage(scheduleData, allDates, fileName, year, month) {
-            try {
-                localStorage.setItem(STORAGE_KEYS.SCHEDULE_DATA, JSON.stringify(scheduleData));
-                localStorage.setItem(STORAGE_KEYS.ALL_DATES, JSON.stringify(allDates));
-                localStorage.setItem(STORAGE_KEYS.FILE_NAME, fileName);
-                localStorage.setItem(STORAGE_KEYS.YEAR_MONTH, JSON.stringify({ year: year, month: month }));
-                localStorage.setItem(STORAGE_KEYS.TIMESTAMP, new Date().getTime().toString());
-                
-                console.log("資料已儲存到 LocalStorage");
-                return true;
-            } catch (error) {
-                console.error("儲存到 LocalStorage 失敗:", error);
-                return false;
-            }
-        }
-
-        // 從 LocalStorage 載入資料
-        function loadFromLocalStorage() {
-            try {
-                const scheduleDataStr = localStorage.getItem(STORAGE_KEYS.SCHEDULE_DATA);
-                const allDatesStr = localStorage.getItem(STORAGE_KEYS.ALL_DATES);
-                const fileName = localStorage.getItem(STORAGE_KEYS.FILE_NAME);
-                const yearMonthStr = localStorage.getItem(STORAGE_KEYS.YEAR_MONTH);
-                const timestamp = localStorage.getItem(STORAGE_KEYS.TIMESTAMP);
-                
-                if (!scheduleDataStr || !allDatesStr) {
-                    console.log("LocalStorage 中沒有儲存的資料");
-                    return null;
-                }
-                
-                // 檢查資料是否過期（例如超過7天）
-                const now = new Date().getTime();
-                const storedTime = parseInt(timestamp || '0');
-                const sevenDays = 7 * 24 * 60 * 60 * 1000;
-                
-                if (now - storedTime > sevenDays) {
-                    console.log("儲存的資料已過期，清除舊資料");
-                    clearLocalStorage();
-                    return null;
-                }
-                
-                let year = 2026;
-                let month = 1;
-                
-                if (yearMonthStr) {
-                    try {
-                        const yearMonth = JSON.parse(yearMonthStr);
-                        year = yearMonth.year || 2026;
-                        month = yearMonth.month || 1;
-                    } catch (e) {
-                        console.error("解析年份月份失敗:", e);
-                    }
-                }
-                
-                return {
-                    scheduleData: JSON.parse(scheduleDataStr),
-                    allDates: JSON.parse(allDatesStr),
-                    fileName: fileName || '',
-                    year: year,
-                    month: month
-                };
-            } catch (error) {
-                console.error("從 LocalStorage 載入資料失敗:", error);
-                clearLocalStorage();
-                return null;
-            }
-        }
-
-        // 清除 LocalStorage
-        function clearLocalStorage() {
-            Object.values(STORAGE_KEYS).forEach(key => {
-                localStorage.removeItem(key);
-            });
-            console.log("LocalStorage 資料已清除");
-        }
-
-        // 初始化應用程式
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM載入完成，初始化應用程式");
-            init();
-        });
-
-        console.log("每日人力工具初始化完成！");
+        function init(){ document.getElementById('uploadBtn').addEventListener('click',()=>document.getElementById('fileInput').click()); document.getElementById('fileInput').addEventListener('change',e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); }); document.getElementById('reuploadBtn').addEventListener('click',()=>document.getElementById('fileInput').click()); document.getElementById('clearStorageBtn').addEventListener('click',()=>{ if(confirm('清除所有資料？')){ clearLocalStorage(); location.reload(); } }); document.getElementById('dateSelect')?.addEventListener('change',()=>showSelectedDateSchedule()); let saved=loadFromLocalStorage(); if(saved){ scheduleData=saved.scheduleData; allDates=saved.allDates; currentFileName=saved.fileName; currentYear=saved.year; currentMonth=saved.month; updateDateSelect(); updateDateStats(); updateDeputyListDisplay(); document.getElementById('resultSection').style.display='block'; document.getElementById('filterInfo').style.display='block'; document.getElementById('filterStatus').innerHTML=`使用快取 (${currentFileName}) ${scheduleData.length}人`; showSelectedDateSchedule(); } }
+        document.addEventListener('DOMContentLoaded',init);
     </script>
 </body>
-    </html>
+</html>
