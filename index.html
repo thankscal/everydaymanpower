@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>每日人力 - 智慧班表助手（授權明細列表式）</title>
+    <title>每日人力 - 智慧班表助手（最終優化版）</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <style>
@@ -35,12 +35,14 @@
         .holiday-section { background-color: rgba(255, 158, 0, 0.15) !important; border-left: 4px solid #ff9e00; }
         .holiday-title { color: #e67e22; }
         .work-shift-title { color: #1e7e5e; }
-        .sort-panel { position: sticky; top: 20px; }
+        /* 右側面板不再 sticky */
+        .sort-panel { /* 移除sticky */ }
         .sort-group-list { max-height: 50vh; overflow-y: auto; padding-right: 5px; }
         .sort-item { background: white; border-radius: 14px; padding: 6px 10px; margin-bottom: 8px; border-left: 4px solid #17a2b8; font-size: 0.85rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .sort-item .badge-time { background: #e9ecef; padding: 2px 8px; border-radius: 30px; font-size: 0.7rem; }
-        .auth-detail-list { max-height: 40vh; overflow-y: auto; }
-        .auth-detail-item { background: #f8f9fa; border-radius: 16px; padding: 10px; margin-bottom: 10px; border-left: 4px solid #3399ff; }
+        /* 授權詳細清單樣式 - 淺綠色背景 */
+        .auth-detail-list { max-height: 50vh; overflow-y: auto; }
+        .auth-detail-item { background: #e6f7e6; border-radius: 16px; padding: 10px; margin-bottom: 10px; border-left: 4px solid #3399ff; }
         .auth-name { font-weight: bold; font-size: 0.95rem; color: #0d6efd; margin-bottom: 6px; }
         .auth-group { margin-top: 8px; }
         .auth-group-header { font-weight: 600; color: #e67e22; margin-bottom: 4px; font-size: 0.85rem; }
@@ -93,6 +95,15 @@
                     <div id="dateStats" class="small mt-1 text-secondary"></div>
                 </div>
 
+                <!-- 代領班標記卡片：移到左側，放在人力配置最上方 -->
+                <div class="card mt-2" id="deputyListSection" style="display: none;">
+                    <div class="card-body p-2">
+                        <h6><i class="bi bi-person-badge"></i> 代領班標記</h6>
+                        <div class="row" id="deputyListContainer"></div>
+                    </div>
+                </div>
+
+                <!-- 班型對照表 -->
                 <div class="card mb-2">
                     <div class="card-header p-2" data-bs-toggle="collapse" href="#shiftGuide" role="button" style="background:#f8f9fa; cursor:pointer;">
                         <i class="bi bi-info-circle"></i> 班型對照表 <i class="bi bi-chevron-down float-end"></i>
@@ -116,7 +127,7 @@
                 </div>
             </div>
 
-            <!-- 右側：排序 + 授權詳細清單 + 代領班 -->
+            <!-- 右側：排序 + 授權詳細清單 -->
             <div class="sort-sidebar">
                 <div class="card sort-panel">
                     <div class="card-header bg-white fw-bold"><i class="bi bi-clock-history"></i> 自動排序 · 非授權/非管理職</div>
@@ -133,13 +144,6 @@
                     <div class="card-header bg-white fw-bold text-primary"><i class="bi bi-person-badge"></i> ✈ 當日授權人員詳細資訊</div>
                     <div class="card-body p-2 auth-detail-list" id="authDetailContainer">
                         <div class="text-muted small text-center">請選擇日期</div>
-                    </div>
-                </div>
-
-                <div class="card mt-2" id="deputyListSection" style="display: none;">
-                    <div class="card-body p-2">
-                        <h6><i class="bi bi-person-badge"></i> 代領班標記</h6>
-                        <div class="row" id="deputyListContainer"></div>
                     </div>
                 </div>
             </div>
@@ -159,7 +163,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// ======================= 授權資料庫 (完整授權明細，與之前相同) =======================
+// ======================= 授權資料庫 (完整授權明細，與最終版相同) =======================
 const authorizationDB = new Map();
 function addAuth(name, detail) { authorizationDB.set(name, detail); }
 
@@ -349,15 +353,13 @@ addAuth('康子平', `✈ 授權明細：
 // ======================= 格式化授權文字為列表樣式（按航司分組，橘色線分隔）=======================
 function formatAuthText(authText) {
     if (!authText) return '<div>無授權資料</div>';
-    // 移除開頭的 "✈ 授權明細：" 標題
     let content = authText.replace(/^✈\s*授權明細：\s*/, '');
     let lines = content.split('\n').filter(l => l.trim().length > 0);
-    let groups = []; // 每個元素 { header, items: [] }
+    let groups = [];
     let currentGroup = null;
     for (let line of lines) {
         line = line.trim();
         if (line.startsWith('•')) {
-            // 格式如 "• CAA(華航): A330-300 ..."
             let match = line.match(/^•\s*([^:]+):\s*(.*)$/);
             if (match) {
                 let header = match[1].trim();
@@ -370,11 +372,9 @@ function formatAuthText(authText) {
                     currentGroup = { header: header, items: items };
                 }
             } else {
-                // 沒有冒號的當作延續項目
                 if (currentGroup) currentGroup.items.push(line.replace(/^•\s*/, ''));
             }
         } else {
-            // 非 • 開頭的行，可能是續行
             if (currentGroup && line.length > 0) {
                 currentGroup.items[currentGroup.items.length-1] += ' ' + line;
             }
@@ -398,7 +398,7 @@ function formatAuthText(authText) {
     return html;
 }
 
-// ======================= 其他全域變數與功能（保持原有邏輯）=======================
+// ======================= 其他全域變數與功能 =======================
 const targetPersonnel = [
     '馮一民','程家榮','范原福','黃茂松','喬宇民','陳登峯','蔡宗昌','江俊忠','鍾永源','林義勳','陳枝萬',
     '陳郁青','林柏辰','王樂美','黃志傑','蘇健文','洪啓晃','黃弘仁','楊金雄','王昱博','郭鎮溢','伍丁山',
@@ -423,7 +423,7 @@ const personnelCategories = {
     'random':{names:[],cssClass:'random-person',title:'其他',rank:9}
 };
 let scheduleData = [], allDates = [], currentFileName = '', deputyStatus = {}, currentYear = 2026, currentMonth = 1;
-const STORAGE_KEYS = {SCHEDULE_DATA:'scheduleData_finalV3',ALL_DATES:'allDates_finalV3',FILE_NAME:'fileName_finalV3',DEPUTY_STATUS:'deputyStatus_finalV3',YEAR_MONTH:'yearMonth_finalV3'};
+const STORAGE_KEYS = {SCHEDULE_DATA:'scheduleData_finalV4',ALL_DATES:'allDates_finalV4',FILE_NAME:'fileName_finalV4',DEPUTY_STATUS:'deputyStatus_finalV4',YEAR_MONTH:'yearMonth_finalV4'};
 
 function getPersonCategory(name) { for(let c in personnelCategories) if(personnelCategories[c].names.includes(name)) return c; return 'random'; }
 function analyzeShift(shiftStr){ if(!shiftStr) return {normalizedShift:'',isHoliday:false}; let s=shiftStr.trim(); let isHoliday=holidayShifts.includes(s); if(s.includes('福')||s.includes('公')) isHoliday=true; return {normalizedShift:s,isHoliday:isHoliday}; }
@@ -536,4 +536,4 @@ document.getElementById('autoSortBtn')?.addEventListener('click',()=>refreshAuto
 let saved=loadFromLocalStorage(); if(saved){ scheduleData=saved.scheduleData; allDates=saved.allDates; currentFileName=saved.fileName; currentYear=saved.year; currentMonth=saved.month; updateDateSelect(); updateDateStats(); updateDeputyListDisplay(); document.getElementById('resultSection').style.display='block'; showSelectedDateSchedule(); refreshAutoSort(); updateAuthDetailPanel(); }
 </script>
 </body>
-                                                                                                                    </html>
+</html>
