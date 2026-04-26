@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>每日人力 - 智慧班表助手（最終一致版）</title>
+    <title>每日人力 - 智慧班表助手（最終完整一致版）</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <style>
@@ -80,7 +80,6 @@
 
     <div class="result-section" id="resultSection" style="display: none;">
         <div class="two-column-layout">
-            <!-- 左側主內容 -->
             <div class="main-content">
                 <div class="date-selector mb-2 p-2 bg-white rounded-3 shadow-sm">
                     <div class="d-flex flex-wrap align-items-center justify-content-between">
@@ -94,7 +93,6 @@
                     <div id="dateStats" class="small mt-1 text-secondary"></div>
                 </div>
 
-                <!-- 代領班標記卡片 -->
                 <div class="card mt-2" id="deputyListSection" style="display: none;">
                     <div class="card-body p-2">
                         <h6><i class="bi bi-person-badge"></i> 代領班標記</h6>
@@ -102,7 +100,6 @@
                     </div>
                 </div>
 
-                <!-- 班型對照表 -->
                 <div class="card mb-2">
                     <div class="card-header p-2" data-bs-toggle="collapse" href="#shiftGuide" role="button" style="background:#f8f9fa; cursor:pointer;">
                         <i class="bi bi-info-circle"></i> 班型對照表 <i class="bi bi-chevron-down float-end"></i>
@@ -125,7 +122,6 @@
                     <div class="card-body p-2" id="scheduleResults"></div>
                 </div>
 
-                <!-- 授權人員查詢卡片 -->
                 <div class="card mt-3" id="authQueryCard">
                     <div class="card-header bg-white fw-bold text-primary"><i class="bi bi-search"></i> 授權人員查詢</div>
                     <div class="card-body p-2">
@@ -137,7 +133,6 @@
                 </div>
             </div>
 
-            <!-- 右側：排序 + 授權詳細清單 -->
             <div class="sort-sidebar">
                 <div class="card sort-panel">
                     <div class="card-header bg-white fw-bold"><i class="bi bi-clock-history"></i> 自動排序 · 非授權/非管理職</div>
@@ -173,7 +168,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// ======================= 授權資料庫 (完整授權明細) =======================
+// ======================= 授權資料庫 (姓名與班表完全一致，洪啓晃已修正) =======================
 const authorizationDB = new Map();
 function addAuth(name, detail) { authorizationDB.set(name, detail); }
 
@@ -285,7 +280,8 @@ addAuth('蘇健文', `✈ 授權明細：
 • FAA(美聯): B737-800
 • Korea MLTM(濟州/德威): B737-800`);
 
-addAuth('洪啟晃', `✈ 授權明細：
+// 洪啓晃 (注意名字寫法與班表一致)
+addAuth('洪啓晃', `✈ 授權明細：
 • CAA(華航): B737-800 CFM56 + Run-Up
 • CAAC(南方): B737-700/800 · 東航: B737-700/800 · 廈航: B737-700/800
 • FAA(華航): B737-800 + Run-Up · FAA(美聯): B737-800`);
@@ -433,7 +429,7 @@ const personnelCategories = {
     'random':{names:[],cssClass:'random-person',title:'其他',rank:9}
 };
 let scheduleData = [], allDates = [], currentFileName = '', deputyStatus = {}, currentYear = 2026, currentMonth = 1;
-const STORAGE_KEYS = {SCHEDULE_DATA:'scheduleData_finalV6',ALL_DATES:'allDates_finalV6',FILE_NAME:'fileName_finalV6',DEPUTY_STATUS:'deputyStatus_finalV6',YEAR_MONTH:'yearMonth_finalV6'};
+const STORAGE_KEYS = {SCHEDULE_DATA:'scheduleData_finalV7',ALL_DATES:'allDates_finalV7',FILE_NAME:'fileName_finalV7',DEPUTY_STATUS:'deputyStatus_finalV7',YEAR_MONTH:'yearMonth_finalV7'};
 
 function getPersonCategory(name) { for(let c in personnelCategories) if(personnelCategories[c].names.includes(name)) return c; return 'random'; }
 function analyzeShift(shiftStr){ if(!shiftStr) return {normalizedShift:'',isHoliday:false}; let s=shiftStr.trim(); let isHoliday=holidayShifts.includes(s); if(s.includes('福')||s.includes('公')) isHoliday=true; return {normalizedShift:s,isHoliday:isHoliday}; }
@@ -445,7 +441,6 @@ function showLoading(){ document.getElementById('loadingSpinner').style.display=
 function hideLoading(){ document.getElementById('loadingSpinner').style.display='none'; document.getElementById('resultSection').style.display='block'; }
 function showError(msg){ let errDiv=document.getElementById('errorMessage'); errDiv.innerHTML=msg; errDiv.style.display='block'; hideLoading(); }
 
-// 判斷某人員在指定日期是否有有效班型（非空、非休假）
 function isValidShift(p, date) {
     let sd = p.shifts[date];
     if (!sd) return false;
@@ -505,7 +500,6 @@ function initAuthSelector() {
 function showSelectedDateSchedule(){
     let date=parseInt(document.getElementById('dateSelect').value); if(!date) return;
     let container=document.getElementById('scheduleResults'); container.innerHTML='';
-    // 使用統一的有效班型判斷
     let total=0; let persons=[];
     scheduleData.forEach(p=>{ if(isValidShift(p, date)) { total++; persons.push(p); } });
     document.getElementById('resultCount').innerText=total+'人';
@@ -560,7 +554,6 @@ function refreshAutoSort(){
 
 function updateAuthDetailPanel(){
     let date=parseInt(document.getElementById('dateSelect').value); if(!date || !scheduleData.length) return;
-    // 使用與左側完全相同的有效班型判斷，且只取授權人員
     let authPersons = scheduleData.filter(p => p.category === 'authorized-person' && isValidShift(p, date));
     let container = document.getElementById('authDetailContainer');
     if(!authPersons.length){ container.innerHTML='<div class="text-muted small text-center">今日無授權人員上班</div>'; return; }
@@ -584,4 +577,4 @@ document.getElementById('autoSortBtn')?.addEventListener('click',()=>refreshAuto
 let saved=loadFromLocalStorage(); if(saved){ scheduleData=saved.scheduleData; allDates=saved.allDates; currentFileName=saved.fileName; currentYear=saved.year; currentMonth=saved.month; updateDateSelect(); updateDateStats(); updateDeputyListDisplay(); initAuthSelector(); document.getElementById('resultSection').style.display='block'; showSelectedDateSchedule(); refreshAutoSort(); updateAuthDetailPanel(); }
 </script>
 </body>
-</html>
+    </html>
