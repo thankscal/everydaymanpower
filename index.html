@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>每日人力 - 智慧班表助手（最終完整一致版）</title>
+    <title>每日人力 - 智慧班表助手（最終響應版）</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <style>
         * { box-sizing: border-box; }
-        body { background-color: #f4f7fc; font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; padding: 12px 0 30px 0; }
-        .container { max-width: 1600px; padding: 0 12px; }
+        body { background-color: #f4f7fc; font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; padding: 12px 0 30px 0; margin: 0; }
+        .container { max-width: 1600px; padding: 0 12px; margin: 0 auto; }
+        /* 兩欄佈局，桌面並排，行動垂直 */
         .two-column-layout { display: flex; flex-wrap: wrap; gap: 20px; }
         .main-content { flex: 2.4; min-width: 0; }
-        .sort-sidebar { flex: 1.3; min-width: 300px; }
+        .sort-sidebar { flex: 1.3; min-width: 280px; }
         @media (max-width: 992px) { .two-column-layout { flex-direction: column; } }
         .card { border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: none; margin-bottom: 1rem; }
         .shift-section { padding: 12px 14px; margin-bottom: 16px; border-radius: 20px; }
-        .person-card { padding: 8px 10px; margin-bottom: 8px; border-radius: 14px; transition: all 0.2s; border-left: 4px solid #e0e0e0; cursor: pointer; position: relative; }
+        .person-card { padding: 8px 10px; margin-bottom: 8px; border-radius: 14px; transition: all 0.1s; border-left: 4px solid #e0e0e0; cursor: pointer; position: relative; }
         .person-name { font-weight: 600; font-size: 0.95rem; display: inline-block; }
         .deputy-badge { font-size: 0.6rem; background-color: #dc3545; color: white; border-radius: 20px; padding: 2px 6px; margin-left: 6px; }
         .shift-description { font-size: 0.7rem; color: #5a626e; margin-top: 4px; }
@@ -35,10 +36,10 @@
         .holiday-section { background-color: rgba(255, 158, 0, 0.15) !important; border-left: 4px solid #ff9e00; }
         .holiday-title { color: #e67e22; }
         .work-shift-title { color: #1e7e5e; }
-        .sort-group-list { max-height: 50vh; overflow-y: auto; padding-right: 5px; }
-        .sort-item { background: white; border-radius: 14px; padding: 6px 10px; margin-bottom: 8px; border-left: 4px solid #17a2b8; font-size: 0.85rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .sort-group-list { max-height: 55vh; overflow-y: auto; padding-right: 5px; }
+        .sort-item { background: white; border-radius: 14px; padding: 6px 10px; margin-bottom: 8px; border-left: 4px solid #17a2b8; font-size: 0.85rem; cursor: pointer; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; }
         .sort-item .badge-time { background: #e9ecef; padding: 2px 8px; border-radius: 30px; font-size: 0.7rem; }
-        .auth-detail-list { max-height: none; overflow-y: visible; }
+        .auth-detail-list { max-height: 50vh; overflow-y: auto; }
         .auth-detail-item { background: #e6f7e6; border-radius: 16px; padding: 10px; margin-bottom: 10px; border-left: 4px solid #3399ff; }
         .auth-name { font-weight: bold; font-size: 0.95rem; color: #0d6efd; margin-bottom: 6px; }
         .auth-group { margin-top: 8px; }
@@ -49,18 +50,23 @@
         .orange-divider { border-top: 2px solid orange; margin: 12px 0; }
         .modal-custom { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; }
         .modal-custom-content { background: white; max-width: 550px; width: 90%; border-radius: 28px; padding: 20px; box-shadow: 0 20px 30px rgba(0,0,0,0.3); text-align: center; max-height: 80vh; overflow-y: auto; }
-        .modal-custom-content h5 { margin-bottom: 15px; color: #0d6efd; }
         .close-modal { background: #dc3545; color: white; border: none; border-radius: 40px; padding: 8px 20px; margin-top: 15px; }
         .copy-notification { position: fixed; bottom: 20px; right: 20px; background: #28a745; color: white; padding: 8px 16px; border-radius: 40px; font-size: 0.85rem; z-index: 1200; opacity: 0; transition: 0.2s; }
         .auth-query-card .form-select { font-size: 0.9rem; }
         .auth-query-detail { margin-top: 12px; max-height: 400px; overflow-y: auto; }
+        /* 桌面一屏完整顯示小調整 */
+        @media (min-width: 1200px) {
+            .container { max-width: 95%; }
+            .person-card { padding: 6px 8px; }
+            .shift-section { padding: 10px 12px; }
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="text-center mb-3">
         <h1 class="fw-bold text-primary"><i class="bi bi-calendar-check"></i> 每日人力</h1>
-        <p class="text-muted small">上傳Excel班表 · 智慧分類 · 點擊授權人名看完整明細 · 右側授權清單</p>
+        <p class="text-muted small">上傳班表 · 單擊看授權 · 雙擊複製姓名 · 自動適配</p>
     </div>
 
     <div class="card">
@@ -80,6 +86,7 @@
 
     <div class="result-section" id="resultSection" style="display: none;">
         <div class="two-column-layout">
+            <!-- 左側主內容 -->
             <div class="main-content">
                 <div class="date-selector mb-2 p-2 bg-white rounded-3 shadow-sm">
                     <div class="d-flex flex-wrap align-items-center justify-content-between">
@@ -93,6 +100,7 @@
                     <div id="dateStats" class="small mt-1 text-secondary"></div>
                 </div>
 
+                <!-- 代領班標記 -->
                 <div class="card mt-2" id="deputyListSection" style="display: none;">
                     <div class="card-body p-2">
                         <h6><i class="bi bi-person-badge"></i> 代領班標記</h6>
@@ -100,6 +108,7 @@
                     </div>
                 </div>
 
+                <!-- 班型對照表 -->
                 <div class="card mb-2">
                     <div class="card-header p-2" data-bs-toggle="collapse" href="#shiftGuide" role="button" style="background:#f8f9fa; cursor:pointer;">
                         <i class="bi bi-info-circle"></i> 班型對照表 <i class="bi bi-chevron-down float-end"></i>
@@ -122,6 +131,7 @@
                     <div class="card-body p-2" id="scheduleResults"></div>
                 </div>
 
+                <!-- 授權人員查詢 -->
                 <div class="card mt-3" id="authQueryCard">
                     <div class="card-header bg-white fw-bold text-primary"><i class="bi bi-search"></i> 授權人員查詢</div>
                     <div class="card-body p-2">
@@ -133,6 +143,7 @@
                 </div>
             </div>
 
+            <!-- 右側：排序 + 當日授權 -->
             <div class="sort-sidebar">
                 <div class="card sort-panel">
                     <div class="card-header bg-white fw-bold"><i class="bi bi-clock-history"></i> 自動排序 · 非授權/非管理職</div>
@@ -168,7 +179,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// ======================= 授權資料庫 (姓名與班表完全一致，洪啓晃已修正) =======================
+// ======================= 授權資料庫 (完整授權明細) =======================
 const authorizationDB = new Map();
 function addAuth(name, detail) { authorizationDB.set(name, detail); }
 
@@ -280,7 +291,6 @@ addAuth('蘇健文', `✈ 授權明細：
 • FAA(美聯): B737-800
 • Korea MLTM(濟州/德威): B737-800`);
 
-// 洪啓晃 (注意名字寫法與班表一致)
 addAuth('洪啓晃', `✈ 授權明細：
 • CAA(華航): B737-800 CFM56 + Run-Up
 • CAAC(南方): B737-700/800 · 東航: B737-700/800 · 廈航: B737-700/800
@@ -356,6 +366,12 @@ addAuth('施登元', `✈ 授權明細：
 addAuth('康子平', `✈ 授權明細：
 • CAA(華航): A319-321 CFM LEAP-1A · A319-321 PW1100G · A319-321 V2500 · No Limitation (M2)`);
 
+// 浦翊青 (授權人員)
+addAuth('浦翊青', `✈ 授權明細：
+• CAA(華航): A319-321 PW1100G · A319-321 V2500 · B737-800 CFM56 (B1)
+• CAA(台虎): A320 V2500 · A320 PW1100G
+• FAA(華航): B737-800`);
+
 // ======================= 格式化授權文字 =======================
 function formatAuthText(authText) {
     if (!authText) return '<div>無授權資料</div>';
@@ -408,10 +424,10 @@ function formatAuthText(authText) {
 const targetPersonnel = [
     '馮一民','程家榮','范原福','黃茂松','喬宇民','陳登峯','蔡宗昌','江俊忠','鍾永源','林義勳','陳枝萬',
     '陳郁青','林柏辰','王樂美','黃志傑','蘇健文','洪啓晃','黃弘仁','楊金雄','王昱博','郭鎮溢','伍丁山',
-    '胡瓊文','蔡嘉洋','張景驊','曾景松','方彥霖','施登元','康子平',
+    '胡瓊文','蔡嘉洋','張景驊','曾景松','方彥霖','施登元','康子平','浦翊青', // 浦翊青已加入
     '嚴奕麟','劉勝得','蔡文財','吳建宗','張帝如','高銘諭','陳建旭','鄭旭軒','江啓民','馮宗賢','黃瑞昌',
     '蘇權煌','黃策士','莊宇丞','侯欽仁','游源正','陳冠勛','吳世莛','葉翊楷','黃浥綸','楊富雄','林裕斌',
-    '江國棟','謝宏望','陳科全','蘇秉豪','蒲翊青','張馨元','施孟辰','林家德','李宗憲','楊育承','江育鐘',
+    '江國棟','謝宏望','陳科全','蘇秉豪','張馨元','施孟辰','林家德','李宗憲','楊育承','江育鐘',
     '龔義文','陳昭良','吳振義','李家旭','江宜德','王樂善','葉長青','蘇傳靖','何源運'
 ];
 const deputyPersonnel = ['陳登峯','陳枝萬','蔡宗昌','鍾永源','陳郁青','林義勳','江俊忠'];
@@ -420,8 +436,8 @@ const shiftDescriptions = {'K0':'05:00~13:00','M':'05:30~13:30','M1':'06:00~14:0
 const personnelCategories = {
     'group-leader':{names:['馮一民','嚴奕麟','范原福'],cssClass:'group-leader',title:'組長',rank:1},
     'foreman':{names:['劉勝得','黃茂松','喬宇民'],cssClass:'foreman',title:'領班',rank:2},
-    'authorized-person':{names:['馮一民','程家榮','范原福','黃茂松','喬宇民','陳登峯','蔡宗昌','江俊忠','鍾永源','林義勳','陳枝萬','陳郁青','林柏辰','王樂美','黃志傑','蘇健文','洪啓晃','黃弘仁','楊金雄','王昱博','郭鎮溢','伍丁山','胡瓊文','蔡嘉洋','張景驊','曾景松','方彥霖','施登元','康子平'],cssClass:'authorized-person',title:'授權人員',rank:3},
-    'm1-person':{names:['蔡文財','吳建宗','張帝如','高銘諭','陳建旭','江啓民','馮宗賢','黃瑞昌','蘇權煌','侯欽仁','游源正','江育鐘','龔義文','陳冠勛','林裕斌','江國棟','吳世莛','葉翊楷','黃浥綸','楊富雄','陳科全','蘇秉豪','蒲翊青'],cssClass:'m1-person',title:'M1人員',rank:4},
+    'authorized-person':{names:['馮一民','程家榮','范原福','黃茂松','喬宇民','陳登峯','蔡宗昌','江俊忠','鍾永源','林義勳','陳枝萬','陳郁青','林柏辰','王樂美','黃志傑','蘇健文','洪啓晃','黃弘仁','楊金雄','王昱博','郭鎮溢','伍丁山','胡瓊文','蔡嘉洋','張景驊','曾景松','方彥霖','施登元','康子平','浦翊青'],cssClass:'authorized-person',title:'授權人員',rank:3},
+    'm1-person':{names:['蔡文財','吳建宗','張帝如','高銘諭','陳建旭','江啓民','馮宗賢','黃瑞昌','蘇權煌','侯欽仁','游源正','江育鐘','龔義文','陳冠勛','林裕斌','江國棟','吳世莛','葉翊楷','黃浥綸','楊富雄','陳科全','蘇秉豪'],cssClass:'m1-person',title:'M1人員',rank:4},
     'm0-person':{names:['鄭旭軒','黃策士','謝宏望','莊宇丞','張馨元','施孟辰','林家德','李宗憲','楊育承'],cssClass:'m0-person',title:'M0人員',rank:5},
     'qc-person':{names:['吳振義','李家旭'],cssClass:'qc-person',title:'QC人員',rank:6},
     'administrative-person':{names:['陳昭良'],cssClass:'administrative-person',title:'行政人員',rank:7},
@@ -429,10 +445,24 @@ const personnelCategories = {
     'random':{names:[],cssClass:'random-person',title:'其他',rank:9}
 };
 let scheduleData = [], allDates = [], currentFileName = '', deputyStatus = {}, currentYear = 2026, currentMonth = 1;
-const STORAGE_KEYS = {SCHEDULE_DATA:'scheduleData_finalV7',ALL_DATES:'allDates_finalV7',FILE_NAME:'fileName_finalV7',DEPUTY_STATUS:'deputyStatus_finalV7',YEAR_MONTH:'yearMonth_finalV7'};
+const STORAGE_KEYS = {SCHEDULE_DATA:'scheduleData_finalV9',ALL_DATES:'allDates_finalV9',FILE_NAME:'fileName_finalV9',DEPUTY_STATUS:'deputyStatus_finalV9',YEAR_MONTH:'yearMonth_finalV9'};
 
 function getPersonCategory(name) { for(let c in personnelCategories) if(personnelCategories[c].names.includes(name)) return c; return 'random'; }
-function analyzeShift(shiftStr){ if(!shiftStr) return {normalizedShift:'',isHoliday:false}; let s=shiftStr.trim(); let isHoliday=holidayShifts.includes(s); if(s.includes('福')||s.includes('公')) isHoliday=true; return {normalizedShift:s,isHoliday:isHoliday}; }
+function normalizeShiftCode(raw) {
+    if (!raw || typeof raw !== 'string') return '';
+    let trimmed = raw.trim();
+    let match = trimmed.match(/^([A-Za-z0-9]+)/);
+    if (match) return match[1];
+    return trimmed;
+}
+function analyzeShift(shiftStr){ 
+    if(!shiftStr) return {normalizedShift:'',isHoliday:false}; 
+    let s = shiftStr.trim(); 
+    let isHoliday = holidayShifts.includes(s); 
+    if(s.includes('福')||s.includes('公')) isHoliday=true; 
+    let normalized = normalizeShiftCode(s);
+    return {normalizedShift:normalized, isHoliday:isHoliday}; 
+}
 function getRealWeekday(year,month,day){ return ['日','一','二','三','四','五','六'][new Date(year,month-1,day).getDay()]; }
 function saveToLocalStorage(data,dates,fn,year,month){ localStorage.setItem(STORAGE_KEYS.SCHEDULE_DATA,JSON.stringify(data)); localStorage.setItem(STORAGE_KEYS.ALL_DATES,JSON.stringify(dates)); localStorage.setItem(STORAGE_KEYS.FILE_NAME,fn); localStorage.setItem(STORAGE_KEYS.YEAR_MONTH,JSON.stringify({year,month})); localStorage.setItem(STORAGE_KEYS.DEPUTY_STATUS,JSON.stringify(deputyStatus)); }
 function loadFromLocalStorage(){ let data=localStorage.getItem(STORAGE_KEYS.SCHEDULE_DATA), dates=localStorage.getItem(STORAGE_KEYS.ALL_DATES), fn=localStorage.getItem(STORAGE_KEYS.FILE_NAME), ym=localStorage.getItem(STORAGE_KEYS.YEAR_MONTH); if(!data||!dates) return null; let sD=JSON.parse(data), aD=JSON.parse(dates), yearMonth=ym?JSON.parse(ym):{year:2026,month:1}, dep=localStorage.getItem(STORAGE_KEYS.DEPUTY_STATUS); if(dep) deputyStatus=JSON.parse(dep); return {scheduleData:sD,allDates:aD,fileName:fn||'',year:yearMonth.year,month:yearMonth.month}; }
@@ -520,7 +550,7 @@ function showSelectedDateSchedule(){
         let row=sec.querySelector(`#holiday-row-${collapseId}`);
         holidayPersons.forEach(p=>{ let col=document.createElement('div'); col.className='col-6 col-sm-4 col-md-3 mb-2'; let cls=personnelCategories[p.category]?.cssClass||'random-person'; let isDep=!!deputyStatus[p.name]; col.innerHTML=`<div class="person-card ${cls} ${isDep?'deputy-card':''}" data-person="${p.name}" data-category="${p.category}"><div class="person-name">${p.name}${isDep?'<span class="deputy-badge">代領班</span>':''}</div><div class="shift-description">休假</div></div>`; row.appendChild(col); });
     }
-    attachAuthClick(); attachCopyEvent(); applyDeputyStatusToCards();
+    attachClickEvents(); applyDeputyStatusToCards();
 }
 function renderShiftGroup(container,shiftCode,personList){
     let sec=document.createElement('div'); sec.className='shift-section regular-shift-section'; let timeStr=shiftDescriptions[shiftCode]||'';
@@ -528,10 +558,49 @@ function renderShiftGroup(container,shiftCode,personList){
     container.appendChild(sec); let row=sec.querySelector('.row');
     personList.forEach(p=>{ let cls=personnelCategories[p.category]?.cssClass||'random-person'; let isDep=!!deputyStatus[p.name]; let col=document.createElement('div'); col.className='col-6 col-sm-4 col-md-3 mb-2'; col.innerHTML=`<div class="person-card ${cls} ${isDep?'deputy-card':''}" data-person="${p.name}" data-category="${p.category}"><div class="person-name">${p.name}${isDep?'<span class="deputy-badge">代領班</span>':''}</div></div>`; row.appendChild(col); });
 }
-function attachAuthClick(){ document.querySelectorAll('.person-card').forEach(card=>{ let name=card.getAttribute('data-person'); if(!name) return; let authText=authorizationDB.get(name); if(authText){ card.removeEventListener('click', showAuthModalHandler); card.addEventListener('click', showAuthModalHandler); function showAuthModalHandler(e){ e.stopPropagation(); document.getElementById('modalAuthContent').innerHTML = formatAuthText(authText); document.getElementById('authModal').style.display='flex'; } }else{ card.removeEventListener('click', copyHandler); card.addEventListener('click', copyHandler); } }); }
-function copyHandler(e){ let nameSpan=this.querySelector('.person-name'); if(nameSpan){ let name=nameSpan.innerText.replace('代領班','').trim(); navigator.clipboard.writeText(name); let notify=document.getElementById('copyNotification'); notify.style.opacity='1'; notify.style.display='block'; setTimeout(()=>{ notify.style.opacity='0'; setTimeout(()=>notify.style.display='none',300); },1200); } }
+function attachClickEvents() {
+    document.querySelectorAll('.person-card').forEach(card => {
+        // 移除舊事件避免重複綁定
+        card.removeEventListener('click', singleClickHandler);
+        card.removeEventListener('dblclick', doubleClickHandler);
+        card.addEventListener('click', singleClickHandler);
+        card.addEventListener('dblclick', doubleClickHandler);
+    });
+}
+function singleClickHandler(e) {
+    e.stopPropagation();
+    let card = this;
+    let name = card.getAttribute('data-person');
+    if (!name) return;
+    let authText = authorizationDB.get(name);
+    if (authText) {
+        document.getElementById('modalAuthContent').innerHTML = formatAuthText(authText);
+        document.getElementById('authModal').style.display = 'flex';
+    } else {
+        // 非授權人員單擊無反應，或者可提示無授權
+        let notify = document.getElementById('copyNotification');
+        notify.innerText = '無授權資料';
+        notify.style.opacity = '1';
+        notify.style.display = 'block';
+        setTimeout(() => { notify.style.opacity = '0'; setTimeout(() => notify.style.display = 'none', 300); }, 1000);
+        setTimeout(() => { notify.innerText = '已複製姓名'; }, 1100);
+    }
+}
+function doubleClickHandler(e) {
+    e.stopPropagation();
+    let card = this;
+    let nameElem = card.querySelector('.person-name');
+    if (nameElem) {
+        let name = nameElem.innerText.replace('代領班', '').trim();
+        navigator.clipboard.writeText(name);
+        let notify = document.getElementById('copyNotification');
+        notify.innerText = '已複製姓名';
+        notify.style.opacity = '1';
+        notify.style.display = 'block';
+        setTimeout(() => { notify.style.opacity = '0'; setTimeout(() => notify.style.display = 'none', 300); }, 1200);
+    }
+}
 function applyDeputyStatusToCards(){ document.querySelectorAll('.person-card').forEach(card=>{ let nameElem=card.querySelector('.person-name'); if(nameElem){ let name=nameElem.innerText.replace('代領班','').trim(); if(deputyStatus[name]){ card.classList.add('deputy-card'); if(!card.querySelector('.deputy-badge')) nameElem.insertAdjacentHTML('beforeend','<span class="deputy-badge ms-1">代領班</span>'); }else{ card.classList.remove('deputy-card'); let badge=card.querySelector('.deputy-badge'); if(badge) badge.remove(); } } }); }
-function attachCopyEvent(){ document.querySelectorAll('.person-card').forEach(card=>{ card.removeEventListener('click', copyHandler); if(!authorizationDB.get(card.getAttribute('data-person'))) card.addEventListener('click', copyHandler); }); }
 
 function refreshAutoSort(){
     let date=parseInt(document.getElementById('dateSelect').value); if(!date || !scheduleData.length) return;
@@ -549,7 +618,7 @@ function refreshAutoSort(){
     html+=`</div></div>`;
     if(!beforeD6.length && !afterD6.length) html='<div class="alert alert-secondary small">今日無非授權/非管理職人員 (不含K5/K6/休假)</div>';
     resultDiv.innerHTML=html;
-    document.querySelectorAll('.sort-item').forEach(el=>{ el.addEventListener('click',()=>{ let name=el.getAttribute('data-name'); if(name){ navigator.clipboard.writeText(name); let notify=document.getElementById('copyNotification'); notify.style.opacity='1'; notify.style.display='block'; setTimeout(()=>{ notify.style.opacity='0'; setTimeout(()=>notify.style.display='none',300); },1200); } }); });
+    document.querySelectorAll('.sort-item').forEach(el=>{ el.addEventListener('click',()=>{ let name=el.getAttribute('data-name'); if(name){ navigator.clipboard.writeText(name); let notify=document.getElementById('copyNotification'); notify.innerText='已複製姓名'; notify.style.opacity='1'; notify.style.display='block'; setTimeout(()=>{ notify.style.opacity='0'; setTimeout(()=>notify.style.display='none',300); },1200); } }); });
 }
 
 function updateAuthDetailPanel(){
@@ -577,4 +646,4 @@ document.getElementById('autoSortBtn')?.addEventListener('click',()=>refreshAuto
 let saved=loadFromLocalStorage(); if(saved){ scheduleData=saved.scheduleData; allDates=saved.allDates; currentFileName=saved.fileName; currentYear=saved.year; currentMonth=saved.month; updateDateSelect(); updateDateStats(); updateDeputyListDisplay(); initAuthSelector(); document.getElementById('resultSection').style.display='block'; showSelectedDateSchedule(); refreshAutoSort(); updateAuthDetailPanel(); }
 </script>
 </body>
-    </html>
+</html>
