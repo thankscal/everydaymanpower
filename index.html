@@ -20,6 +20,24 @@
     .loading-spinner { display: none; text-align: center; padding: 40px; background: #fdf8e7; border-radius: 15px; margin: 20px 0; }
     .result-section { display: none; }
 
+    /* ===== 月份大標題 ===== */
+    .month-title-bar {
+        text-align: center;
+        margin-bottom: 22px;
+        margin-top: 4px;
+    }
+    .month-title-text {
+        display: inline-block;
+        font-size: clamp(1.8rem, 4vw, 2.8rem);
+        font-weight: 900;
+        color: #1a3a6b;
+        letter-spacing: 4px;
+        padding: 8px 32px;
+        border-bottom: 4px solid #4361ee;
+        text-shadow: 2px 2px 8px rgba(67, 97, 238, 0.25);
+        font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+    }
+
     /* ===== 橫式總覽表格 ===== */
     .grid-scroll {
         overflow: auto;
@@ -167,6 +185,17 @@
     }
     .toolbar .btn { border-radius: 10px; font-weight: 600; }
 
+    /* ===== 上傳區收起樣式 ===== */
+    .upload-collapsed-bar {
+        text-align: center;
+        padding: 6px 12px 10px 12px;
+    }
+    .upload-collapsed-bar .btn {
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
     .color-settings-section { background-color: #fdf8e7; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); margin-bottom: 25px; display: none; }
     .color-setting-item { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 15px; margin-bottom: 8px; background-color: #fff9ef; border-radius: 8px; }
     .shift-label2 { min-width: 55px; font-weight: 700; }
@@ -194,6 +223,7 @@
         .shift-code { font-size: 11px; }
         .shift-time { font-size: 8px; }
         .float-copy-btn { top: 10px; right: 10px; padding: 6px 12px; font-size: 12px; }
+        .month-title-text { letter-spacing: 2px; padding: 6px 16px; }
     }
 </style>
 </head>
@@ -202,7 +232,7 @@
 
     <div class="text-center mb-3">
         <h1 class="fw-bold text-primary"><i class="bi bi-calendar-check"></i> 每日人力</h1>
-        <p class="text-muted mb-0" id="headerMonth">橫式總覽｜衝突警示｜代領班：班型後加點 (例 M. / K2.)</p>
+        <p class="text-muted mb-0">橫式總覽｜衝突警示｜代領班：班型後加點 (例 M. / K2.)</p>
     </div>
 
     <div class="feature-note">
@@ -221,7 +251,7 @@
 
     <!-- 上傳區 -->
     <div class="card" id="uploadCard">
-        <div class="card-body">
+        <div class="card-body" id="uploadCardBody">
             <h5 class="card-title"><i class="bi bi-upload"></i> 上傳班表檔案</h5>
             <div class="upload-area" id="uploadArea">
                 <div><i class="bi bi-file-earmark-excel" style="font-size: 4rem; color: #4361ee;"></i></div>
@@ -232,6 +262,11 @@
                 <div id="fileInfo" class="file-info mt-3" style="display: none;"><i class="bi bi-check-circle text-success"></i><span id="fileName"></span></div>
                 <div id="errorMessage" class="error-message" style="display: none;"></div>
             </div>
+        </div>
+        <div id="uploadCollapsed" class="upload-collapsed-bar" style="display:none;">
+            <button class="btn btn-sm btn-outline-primary" id="expandUploadBtn">
+                <i class="bi bi-chevron-down"></i> 顯示上傳區
+            </button>
         </div>
     </div>
 
@@ -249,6 +284,11 @@
             <button class="btn btn-success" id="downloadImageBtn"><i class="bi bi-image"></i> 下載圖片</button>
             <button class="btn btn-primary" id="copyGridBtn"><i class="bi bi-clipboard"></i> 複製班表</button>
             <button class="btn btn-outline-danger" id="clearStorageBtn"><i class="bi bi-trash"></i> 清除資料</button>
+        </div>
+
+        <!-- 月份大標題 -->
+        <div class="month-title-bar" id="monthTitleBar" style="display:none;">
+            <span class="month-title-text" id="monthTitle"></span>
         </div>
 
         <div class="color-settings-section" id="colorSettingsSection">
@@ -334,7 +374,6 @@ function parseShiftCell(rawValue) {
     let raw = String(rawValue).trim();
     if (!raw || raw.startsWith('=')) return null;
 
-    // 以 / 或 ／ 拆分
     let parts = raw.split(/[\/／]/).map(p => p.trim()).filter(p => p);
     if (parts.length === 0) return null;
 
@@ -537,6 +576,20 @@ function clearLocalStorage() {
     location.reload();
 }
 
+/* ===================== 上傳區收起 / 展開 ===================== */
+function collapseUpload() {
+    const body = document.getElementById('uploadCardBody');
+    const collapsed = document.getElementById('uploadCollapsed');
+    if (body) body.style.display = 'none';
+    if (collapsed) collapsed.style.display = 'block';
+}
+function expandUpload() {
+    const body = document.getElementById('uploadCardBody');
+    const collapsed = document.getElementById('uploadCollapsed');
+    if (body) body.style.display = 'block';
+    if (collapsed) collapsed.style.display = 'none';
+}
+
 /* ===================== 顏色設定面板 ===================== */
 function createColorSettings() {
     const container = document.getElementById('colorSettingsContainer');
@@ -719,10 +772,12 @@ function renderGrid() {
     html += '</tbody></table>';
     container.innerHTML = html;
 
-    // 更新頂部標題
-    const headerEl = document.getElementById('headerMonth');
-    if (headerEl) {
-        headerEl.textContent = `${scheduleYear}年${String(scheduleMonth).padStart(2, '0')}月班表`;
+    // 更新大標題（在工具列下方）
+    const titleEl = document.getElementById('monthTitle');
+    const titleBar = document.getElementById('monthTitleBar');
+    if (titleEl && titleBar) {
+        titleEl.textContent = `${scheduleYear}年${String(scheduleMonth).padStart(2, '0')}月班表`;
+        titleBar.style.display = 'block';
     }
 }
 
@@ -1010,12 +1065,14 @@ function showLoading() {
 function hideLoading() {
     document.getElementById('loadingSpinner').style.display = 'none';
     document.getElementById('resultSection').style.display = 'block';
+    collapseUpload();
 }
 function showError(msg) {
     let errDiv = document.getElementById('errorMessage');
     errDiv.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${msg}`;
     errDiv.style.display = 'block';
     hideLoading();
+    expandUpload();
 }
 function handleFile(file) {
     if (!file) return;
@@ -1070,6 +1127,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fileNameSpan.textContent = '目前載入：' + currentFileName;
             document.getElementById('fileInfo').style.display = 'block';
         }
+        collapseUpload();
     }
 
     document.getElementById('fileInput').addEventListener('change', (e) => {
@@ -1082,6 +1140,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('fileInput').click();
         }
     });
+    document.getElementById('expandUploadBtn').onclick = expandUpload;
     document.getElementById('reuploadBtn').onclick = () => document.getElementById('fileInput').click();
     document.getElementById('clearStorageBtn').onclick = () => {
         if (confirm('清除所有本地資料？')) clearLocalStorage();
