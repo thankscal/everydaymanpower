@@ -221,11 +221,12 @@ const shiftDescriptions = {
 const holidayShifts = ['Z','R','GBL','L','A','公','福','體檢'];
 const DOW_CN = ['日','一','二','三','四','五','六'];
 
+/* ===== K5 / K6 改為黑色背景（文字顏色由亮度自動判斷） ===== */
 const defaultShiftColors = {
     'K0':{r:255,g:255,b:102}, 'M':{r:255,g:255,b:102}, 'M1':{r:255,g:255,b:102}, 'M2':{r:255,g:255,b:102}, 'M3':{r:255,g:255,b:102},
     'D':{r:255,g:107,b:107}, 'D2':{r:255,g:107,b:107}, 'D4':{r:255,g:107,b:107}, 'D5':{r:255,g:107,b:107}, 'D6':{r:255,g:107,b:107},
     'K1':{r:153,g:153,b:255}, 'K2':{r:153,g:153,b:255}, 'K3':{r:153,g:153,b:255}, 'K4':{r:153,g:153,b:255},
-    'K5':{r:153,g:153,b:255}, 'K6':{r:153,g:153,b:255}, 'N':{r:153,g:153,b:255},
+    'K5':{r:0,g:0,b:0}, 'K6':{r:0,g:0,b:0}, 'N':{r:153,g:153,b:255},
     'N1':{r:153,g:153,b:255}, 'N2':{r:153,g:153,b:255}, 'N3':{r:153,g:153,b:255},
     'T2':{r:200,g:200,b:200}, 'T3':{r:200,g:200,b:200},
     'Z':{r:204,g:255,b:229}, 'R':{r:204,g:255,b:229}, 'GBL':{r:204,g:255,b:229}, 'L':{r:204,g:255,b:229},
@@ -245,6 +246,15 @@ let formalLeaders = new Set();
 function normalizeName(n) {
     if (!n) return '';
     return String(n).replace(/[\s\u3000]+/g, '').trim();
+}
+
+/* ===== 依背景亮度回傳適合的文字顏色（深色→黃字、淺色→深字） ===== */
+function getShiftLabelTextColors(color) {
+    const lum = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
+    if (lum < 128) {
+        return { code: '#ffd700', time: '#ffe066' };  // 深色背景：班型代碼金色、時間淡黃
+    }
+    return { code: '#1e2a3e', time: '#4a5568' };      // 淺色背景：維持原本深色字
 }
 
 /* ===================== 儲存格背景色解析 ===================== */
@@ -555,12 +565,13 @@ function createColorSettings() {
     function addShiftItem(shift, isSpecial = false) {
         const color = shiftColors[shift] || { r: 128, g: 128, b: 128 };
         const desc = shiftDescriptions[shift] || (isSpecial ? '特殊班型' : '');
+        const txt = getShiftLabelTextColors(color);
         const item = document.createElement('div');
         item.className = 'color-setting-item';
         item.innerHTML = `
             <div class="shift-label2">${shift}</div>
             <div class="time-label">${desc}</div>
-            <div class="color-preview" id="preview_${shift}" style="background:rgb(${color.r},${color.g},${color.b})"></div>
+            <div class="color-preview" id="preview_${shift}" style="background:rgb(${color.r},${color.g},${color.b});color:${txt.code};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;">${shift}</div>
             <div class="color-input-group">
                 <div><span class="badge bg-secondary">R</span><input type="number" min="0" max="255" class="form-control form-control-sm color-input" data-shift="${shift}" data-type="r" value="${color.r}"></div>
                 <div><span class="badge bg-secondary">G</span><input type="number" min="0" max="255" class="form-control form-control-sm color-input" data-shift="${shift}" data-type="g" value="${color.g}"></div>
@@ -576,7 +587,11 @@ function createColorSettings() {
                 if (!shiftColors[shiftCode]) shiftColors[shiftCode] = { r: 128, g: 128, b: 128 };
                 shiftColors[shiftCode][type] = val;
                 const pv = document.getElementById(`preview_${shiftCode}`);
-                if (pv) pv.style.backgroundColor = `rgb(${shiftColors[shiftCode].r},${shiftColors[shiftCode].g},${shiftColors[shiftCode].b})`;
+                if (pv) {
+                    pv.style.backgroundColor = `rgb(${shiftColors[shiftCode].r},${shiftColors[shiftCode].g},${shiftColors[shiftCode].b})`;
+                    const t = getShiftLabelTextColors(shiftColors[shiftCode]);
+                    pv.style.color = t.code;
+                }
                 renderGrid();
             });
         });
@@ -681,11 +696,12 @@ function renderGrid() {
     for (const shift of sortedShifts) {
         const color = shiftColors[shift] || { r: 128, g: 128, b: 128 };
         const desc = shiftDescriptions[shift] || (globalSpecialShifts.has(shift) ? '特殊班型' : '');
+        const txt = getShiftLabelTextColors(color);   // 依亮度決定文字顏色（深色→黃字）
 
         html += '<tr>';
         html += `<th class="row-label shift-label" style="background: rgba(${color.r},${color.g},${color.b},0.75)">
-                    <div class="shift-code">${escapeHtml(shift)}</div>
-                    <div class="shift-time">${escapeHtml(desc)}</div>
+                    <div class="shift-code" style="color:${txt.code}">${escapeHtml(shift)}</div>
+                    <div class="shift-time" style="color:${txt.time}">${escapeHtml(desc)}</div>
                  </th>`;
 
         for (let d = 1; d <= daysInMonth; d++) {
@@ -979,27 +995,19 @@ function parseWorkbook(workbook, fileName) {
     }
     allDates.sort((a, b) => a.date - b.date);
 
-    // ============================================================
     // ========== 讀取正領班名單：A6:A8 職稱 + C6:C8 人名（支援合併儲存格沿用） ==========
-    // ============================================================
     formalLeaders = new Set();
     try {
         console.log('[正領班原始列] 讀取 Excel 第 6~8 行：');
         let lastTitle = '';
-        for (let r = 5; r <= 7; r++) {                    // 5~7 = Excel 第 6~8 行
+        for (let r = 5; r <= 7; r++) {
             let row = json[r] || [];
-            let aVal = String(row[0] || '').trim();       // A 欄（index 0）
-            let cVal = String(row[2] || '').trim();       // C 欄（index 2）
+            let aVal = String(row[0] || '').trim();
+            let cVal = String(row[2] || '').trim();
             console.log(`  Excel第${r + 1}行 → A欄:「${aVal}」 C欄:「${cVal}」`);
-
-            // 合併儲存格：A 欄空白時，沿用上一行的職稱
             if (aVal) lastTitle = aVal;
-
-            // 職稱含「領班」，但排除「代領班」
             let isLeaderTitle = (lastTitle.includes('領班') || lastTitle.includes('领班'))
                 && !lastTitle.includes('代領班') && !lastTitle.includes('代领班');
-
-            // 是正領班 + 有填人名 → 加入名單
             if (isLeaderTitle && cVal) {
                 formalLeaders.add(normalizeName(cVal));
             }
@@ -1008,7 +1016,6 @@ function parseWorkbook(workbook, fileName) {
     } catch (e) { console.warn('[讀取正領班名單失敗]', e); }
     // ============================================================
 
-    // ===== 顏色未匹配收集 =====
     const unmatchedColors = [];
 
     for (let r = dateRowIdx + 1; r < json.length; r++) {
@@ -1070,7 +1077,6 @@ function parseWorkbook(workbook, fileName) {
         }
     }
 
-    // ===== 未匹配顏色輸出到 F12 =====
     if (unmatchedColors.length > 0) {
         console.group(`%c⚠️ ${unmatchedColors.length} 個儲存格顏色未匹配任何標籤`, 'color:#e67e22;font-weight:bold;font-size:14px;');
         console.info('💡 目前對照表：黃色(255,255,0)=早班代領班｜綠色(146,208,80)=中班代領班｜藍色(216,109,205)=PCC｜紅色範圍=紅色標記');
@@ -1181,7 +1187,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('expandUploadBtn').onclick = expandUpload;
     document.getElementById('reuploadBtn').onclick = () => document.getElementById('fileInput').click();
 
-    // 「清除畫面」改為清空記憶體資料，回到上傳狀態
     document.getElementById('clearStorageBtn').onclick = () => {
         if (confirm('確定清除目前班表？')) {
             scheduleData = [];
